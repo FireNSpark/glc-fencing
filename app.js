@@ -1,13 +1,13 @@
 let map;
-let drawingManager;
-let currentPolyline = null;
+let fencePolyline = null;
+let pathArray = null;
 let currentFeet = 0;
 
 function initMap() {
   const mapElement = document.getElementById("map");
   if (!mapElement) return;
 
-  // Initialize map at zoom 20 with maxZoom explicitly uncapped to 22
+  // Initialize map with unlocked maximum satellite zoom
   map = new google.maps.Map(mapElement, {
     center: { lat: 32.1313, lng: -81.2323 },
     zoom: 20,
@@ -18,8 +18,29 @@ function initMap() {
     gestureHandling: 'greedy'
   });
 
+  // Create active polyline instance
+  fencePolyline = new google.maps.Polyline({
+    strokeColor: '#FF0000',
+    strokeOpacity: 1.0,
+    strokeWeight: 4,
+    editable: true,
+    map: map
+  });
+
+  pathArray = fencePolyline.getPath();
+
+  // Listen directly for map taps to drop points and calculate in real time
+  map.addListener('click', (e) => {
+    pathArray.push(e.latLng);
+    calculateLength();
+  });
+
+  // Listen for vertex edits (dragging red points)
+  google.maps.event.addListener(pathArray, 'set_at', calculateLength);
+  google.maps.event.addListener(pathArray, 'insert_at', calculateLength);
+  google.maps.event.addListener(pathArray, 'remove_at', calculateLength);
+
   setupAutocomplete();
-  setupDrawingManager();
 }
 
 function setupAutocomplete() {
@@ -41,53 +62,11 @@ function setupAutocomplete() {
   });
 }
 
-function setupDrawingManager() {
-  drawingManager = new google.maps.drawing.DrawingManager({
-    drawingMode: google.maps.drawing.OverlayType.POLYLINE,
-    drawingControl: true,
-    drawingControlOptions: {
-      position: google.maps.ControlPosition.TOP_CENTER,
-      drawingModes: [google.maps.drawing.OverlayType.POLYLINE]
-    },
-    polylineOptions: {
-      strokeColor: '#FF0000',
-      strokeOpacity: 1.0,
-      strokeWeight: 4,
-      editable: true,
-      draggable: false
-    }
-  });
-
-  drawingManager.setMap(map);
-
-  google.maps.event.addListener(drawingManager, 'overlaycomplete', function(event) {
-    if (event.type === google.maps.drawing.OverlayType.POLYLINE) {
-      if (currentPolyline) currentPolyline.setMap(null);
-      currentPolyline = event.overlay;
-
-      const path = currentPolyline.getPath();
-      bindPathListeners(path);
-    }
-  });
-}
-
-function bindPathListeners(path) {
-  calculateLength(path);
-  google.maps.event.addListener(path, 'insert_at', () => calculateLength(path));
-  google.maps.event.addListener(path, 'set_at', () => calculateLength(path));
-  google.maps.event.addListener(path, 'remove_at', () => calculateLength(path));
-}
-
-function calculateLength(path) {
-  if (!path) {
-    if (currentPolyline) path = currentPolyline.getPath();
-    else return;
-  }
-
-  if (path.getLength() < 2) {
+function calculateLength() {
+  if (!pathArray || pathArray.getLength() < 2) {
     currentFeet = 0;
   } else {
-    const lengthInMeters = google.maps.geometry.spherical.computeLength(path);
+    const lengthInMeters = google.maps.geometry.spherical.computeLength(pathArray);
     currentFeet = Math.round(lengthInMeters * 3.28084);
   }
 
@@ -95,22 +74,17 @@ function calculateLength(path) {
 }
 
 function undoLastPoint() {
-  if (currentPolyline) {
-    const path = currentPolyline.getPath();
-    if (path.getLength() > 0) {
-      path.pop();
-      calculateLength(path);
-    }
+  if (pathArray && pathArray.getLength() > 0) {
+    pathArray.pop();
+    calculateLength();
   }
 }
 
 function clearMap() {
-  if (currentPolyline) {
-    currentPolyline.setMap(null);
-    currentPolyline = null;
+  if (pathArray) {
+    pathArray.clear();
+    calculateLength();
   }
-  currentFeet = 0;
-  document.getElementById("footage-display").innerText = "0";
 }
 
 function submitLead() {
