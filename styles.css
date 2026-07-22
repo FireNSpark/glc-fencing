@@ -3,11 +3,12 @@ body { margin: 0; padding: 0; background: #f4f6f8; color: #1c1e21; }
 
 /* FIX FOR GOOGLE MAPS AUTOCOMPLETE DROPDOWN VISIBILITY ON MOBILE */
 .pac-container {
-  z-index: 99999 !important;
+  z-index: 999999 !important;
   background-color: #ffffff !important;
   border-radius: 6px !important;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.15) !important;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2) !important;
   font-family: inherit !important;
+  pointer-events: auto !important;
 }
 
 /* Landing Page Styles */
@@ -76,7 +77,7 @@ body { margin: 0; padding: 0; background: #f4f6f8; color: #1c1e21; }
 .input-field { width: 100%; padding: 12px; font-size: 15px; border: 1px solid #ccc; border-radius: 6px; outline: none; }
 .input-field:focus { border-color: #2b7a78; }
 
-#map { height: 400px; width: 100%; border-radius: 6px; }
+#map { height: 400px; width: 100%; border-radius: 6px; background: #e0e0e0; }
 
 .tool-bar-bottom { display: flex; gap: 10px; margin: 12px 0; }
 .btn-action { flex: 1; padding: 12px; font-size: 14px; font-weight: bold; border: 1px solid #ccc; background: #fff; border-radius: 6px; cursor: pointer; }

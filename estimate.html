@@ -18,14 +18,13 @@
 
   <main class="container">
     <!-- Step 1: Address Input -->
-    <div class="step-card" id="step-1-card">
+    <div class="step-card">
       <label for="search-box" class="section-label">Step 1: Enter Property Address</label>
-      <input id="search-box" class="input-field" type="text" placeholder="Start typing address..." />
-      <button class="btn-primary" type="button" id="btn-to-step-2" onclick="proceedToMap()">Continue to Mapping →</button>
+      <input id="search-box" class="input-field" type="text" placeholder="Type property address..." />
     </div>
 
-    <!-- Step 2: Hidden until address is selected or Continue is tapped -->
-    <div class="step-card hidden" id="step-2-card">
+    <!-- Step 2: Map Drawing -->
+    <div class="step-card">
       <label class="section-label">Step 2: Draw Fence Line</label>
       <p class="instruction-text">Tap the <b>zigzag icon</b> on top of the map to begin drawing along your property line.</p>
       
@@ -40,17 +39,17 @@
       <div class="stats-badge">Total Linear Footage: <span id="footage-display">0</span> ft</div>
     </div>
 
-    <!-- Step 3: Specifications (Hidden until map step active) -->
-    <div class="step-card hidden" id="step-3-card">
+    <!-- Step 3: Specifications (Clean Options - No Pricing Visible) -->
+    <div class="step-card">
       <label class="section-label">Step 3: Fence Specifications</label>
       <div class="controls-grid">
         <div class="control-group">
           <label for="material-select">Material Option</label>
           <select id="material-select" class="input-field">
-            <option value="25">Wood Privacy ($25/ft baseline)</option>
-            <option value="35">Vinyl Privacy ($35/ft baseline)</option>
-            <option value="20">Chain Link ($20/ft baseline)</option>
-            <option value="45">Ornamental Aluminum ($45/ft baseline)</option>
+            <option value="25">Wood Privacy</option>
+            <option value="35">Vinyl Privacy</option>
+            <option value="20">Chain Link</option>
+            <option value="45">Ornamental Aluminum</option>
           </select>
         </div>
         <div class="control-group">
@@ -64,8 +63,8 @@
       </div>
     </div>
 
-    <!-- Step 4: Form & Output (Hidden until map step active) -->
-    <div class="step-card hidden" id="step-4-card">
+    <!-- Step 4: Contact & Calculation -->
+    <div class="step-card">
       <div id="form-container">
         <label class="section-label">Step 4: Unlock Instant Quote</label>
         <div class="controls-grid">
