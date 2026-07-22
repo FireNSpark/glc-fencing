@@ -2,37 +2,42 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>GLC Fencing - Instant Estimate Tool</title>
   <script async defer 
-    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDigtiw69XtU_EC1ke5cUJLtEUBQSTi9CE&libraries=drawing,places,geometry&callback=initMap">
+    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDigtiw69XtU_EC1ke5cUJLtEUBQSTi9CE&libraries=drawing,places,geometry&v=weekly&callback=initMap">
   </script>
   <style>
-    body { font-family: Arial, sans-serif; margin: 0; padding: 20px; background: #f4f4f9; }
-    .container { max-width: 900px; margin: auto; background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+    body { font-family: Arial, sans-serif; margin: 0; padding: 15px; background: #f4f4f9; }
+    .container { max-width: 900px; margin: auto; background: #fff; padding: 15px; border-radius: 8px; }
     #search-box { width: 100%; padding: 12px; font-size: 16px; box-sizing: border-box; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 4px; }
-    #map { height: 500px; width: 100%; border-radius: 6px; }
-    .stats-panel { margin-top: 15px; padding: 15px; background: #eef2f5; border-radius: 6px; font-size: 18px; font-weight: bold; }
+    #map { height: 450px; width: 100%; border-radius: 6px; }
+    .stats-panel { margin-top: 15px; padding: 15px; background: #eef2f5; border-radius: 6px; text-align: center; font-size: 18px; font-weight: bold; }
   </style>
 </head>
 <body>
+
 <div class="container">
-  <h2>GLC Fencing - Draw Your Fence Line</h2>
-  <input id="search-box" type="text" placeholder="Enter your home address..." />
+  <h2>GLC Fencing - Draw Your Fence</h2>
+  <input id="search-box" type="text" placeholder="Enter address..." />
   <div id="map"></div>
   <div class="stats-panel">
     Total Linear Feet: <span id="footage-display">0</span> ft
   </div>
 </div>
+
 <script>
   let map, drawingManager, currentPolyline = null;
+
   function initMap() {
     map = new google.maps.Map(document.getElementById("map"), {
       center: { lat: 32.1313, lng: -81.2323 },
       zoom: 19,
       mapTypeId: 'hybrid',
-      tilt: 0
+      tilt: 0,
+      gestureHandling: 'greedy'
     });
+
     const input = document.getElementById("search-box");
     const autocomplete = new google.maps.places.Autocomplete(input);
     autocomplete.bindTo("bounds", map);
@@ -42,23 +47,38 @@
       if (place.geometry.viewport) { map.fitBounds(place.geometry.viewport); } 
       else { map.setCenter(place.geometry.location); map.setZoom(20); }
     });
+
+    // Force drawing controls visible
     drawingManager = new google.maps.drawing.DrawingManager({
       drawingMode: google.maps.drawing.OverlayType.POLYLINE,
       drawingControl: true,
-      drawingControlOptions: { position: google.maps.ControlPosition.TOP_CENTER, drawingModes: ['polyline'] },
-      polylineOptions: { strokeColor: '#FF0000', strokeOpacity: 0.8, strokeWeight: 4, editable: true, draggable: true }
+      drawingControlOptions: {
+        position: google.maps.ControlPosition.TOP_CENTER,
+        drawingModes: [google.maps.drawing.OverlayType.POLYLINE]
+      },
+      polylineOptions: {
+        strokeColor: '#FF0000',
+        strokeOpacity: 1.0,
+        strokeWeight: 5,
+        editable: true,
+        clickable: true
+      }
     });
+
     drawingManager.setMap(map);
+
     google.maps.event.addListener(drawingManager, 'overlaycomplete', function(event) {
       if (event.type === google.maps.drawing.OverlayType.POLYLINE) {
         if (currentPolyline) currentPolyline.setMap(null);
         currentPolyline = event.overlay;
         calculateLength(currentPolyline);
+
         google.maps.event.addListener(currentPolyline.getPath(), 'set_at', () => calculateLength(currentPolyline));
         google.maps.event.addListener(currentPolyline.getPath(), 'insert_at', () => calculateLength(currentPolyline));
       }
     });
   }
+
   function calculateLength(polyline) {
     const path = polyline.getPath();
     const lengthInMeters = google.maps.geometry.spherical.computeLength(path);
@@ -66,5 +86,6 @@
     document.getElementById("footage-display").innerText = lengthInFeet;
   }
 </script>
+
 </body>
 </html>
