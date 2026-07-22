@@ -1,22 +1,43 @@
-let map, drawingManager, currentPolyline = null;
+let map;
+let currentPolyline = null;
 let currentFeet = 0;
 
 function initMap() {
   const mapElement = document.getElementById("map");
   if (!mapElement) return;
 
-  // Set initial zoom to 20 with uncapped high-resolution satellite imagery
+  // Initialize map centered at zoom 20 with no maxZoom lock
   map = new google.maps.Map(mapElement, {
     center: { lat: 32.1313, lng: -81.2323 },
     zoom: 20,
-    maxZoom: 22,
     mapTypeId: 'hybrid',
     tilt: 0,
     gestureHandling: 'greedy'
   });
 
+  // Create primary drawing polyline immediately
+  currentPolyline = new google.maps.Polyline({
+    strokeColor: '#FF0000',
+    strokeOpacity: 1.0,
+    strokeWeight: 4,
+    editable: true,
+    map: map
+  });
+
+  // Direct map tap listener - adds point directly to line
+  map.addListener('click', (e) => {
+    const path = currentPolyline.getPath();
+    path.push(e.latLng);
+    calculateLength();
+  });
+
+  // Listen for manual vertex adjustments/drags on the line
+  const path = currentPolyline.getPath();
+  google.maps.event.addListener(path, 'set_at', calculateLength);
+  google.maps.event.addListener(path, 'insert_at', calculateLength);
+  google.maps.event.addListener(path, 'remove_at', calculateLength);
+
   setupAutocomplete();
-  setupDrawingManager();
 }
 
 function setupAutocomplete() {
@@ -34,58 +55,14 @@ function setupAutocomplete() {
     if (!place.geometry || !place.geometry.location) return;
     
     map.setCenter(place.geometry.location);
-    map.setZoom(20); // Focus directly on house at Zoom 20
+    map.setZoom(20);
   });
 }
 
-function setupDrawingManager() {
-  drawingManager = new google.maps.drawing.DrawingManager({
-    drawingMode: google.maps.drawing.OverlayType.POLYLINE,
-    drawingControl: true,
-    drawingControlOptions: {
-      position: google.maps.ControlPosition.TOP_CENTER,
-      drawingModes: [google.maps.drawing.OverlayType.POLYLINE]
-    },
-    polylineOptions: {
-      strokeColor: '#FF0000',
-      strokeOpacity: 1.0,
-      strokeWeight: 4,
-      editable: true,
-      draggable: false
-    }
-  });
-
-  drawingManager.setMap(map);
-
-  // Live real-time path listener (updates footage as every point is dropped)
-  google.maps.event.addListener(drawingManager, 'polylinecomplete', function(polyline) {
-    if (currentPolyline) currentPolyline.setMap(null);
-    currentPolyline = polyline;
-    bindPathListeners(currentPolyline.getPath());
-  });
-
-  google.maps.event.addListener(drawingManager, 'overlaycomplete', function(event) {
-    if (event.type === google.maps.drawing.OverlayType.POLYLINE) {
-      if (currentPolyline) currentPolyline.setMap(null);
-      currentPolyline = event.overlay;
-      bindPathListeners(currentPolyline.getPath());
-    }
-  });
-}
-
-function bindPathListeners(path) {
-  calculateLength(path);
-  google.maps.event.addListener(path, 'insert_at', () => calculateLength(path));
-  google.maps.event.addListener(path, 'set_at', () => calculateLength(path));
-  google.maps.event.addListener(path, 'remove_at', () => calculateLength(path));
-}
-
-function calculateLength(path) {
-  if (!path) {
-    if (currentPolyline) path = currentPolyline.getPath();
-    else return;
-  }
-
+function calculateLength() {
+  if (!currentPolyline) return;
+  const path = currentPolyline.getPath();
+  
   if (path.getLength() < 2) {
     currentFeet = 0;
   } else {
@@ -101,15 +78,14 @@ function undoLastPoint() {
     const path = currentPolyline.getPath();
     if (path.getLength() > 0) {
       path.pop();
-      calculateLength(path);
+      calculateLength();
     }
   }
 }
 
 function clearMap() {
   if (currentPolyline) {
-    currentPolyline.setMap(null);
-    currentPolyline = null;
+    currentPolyline.setPath([]);
   }
   currentFeet = 0;
   document.getElementById("footage-display").innerText = "0";
@@ -126,7 +102,7 @@ function submitLead() {
   }
 
   if (currentFeet === 0) {
-    alert("Please draw your fence line on the map first.");
+    alert("Please tap on the map to draw your fence line first.");
     return;
   }
 
