@@ -2,10 +2,10 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>GLC Fencing - Instant Estimate Tool</title>
   <script async defer 
-    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDigtiw69XtU_EC1ke5cUJLtEUBQSTi9CE&libraries=drawing,places,geometry&v=weekly&callback=initMap">
+    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDigtiw69XtU_EC1ke5cUJLtEUBQSTi9CE&libraries=drawing,places,geometry&v=3.64&callback=initMap">
   </script>
   <style>
     body { font-family: Arial, sans-serif; margin: 0; padding: 15px; background: #f4f4f9; }
@@ -34,8 +34,7 @@
       center: { lat: 32.1313, lng: -81.2323 },
       zoom: 19,
       mapTypeId: 'hybrid',
-      tilt: 0,
-      gestureHandling: 'greedy'
+      tilt: 0
     });
 
     const input = document.getElementById("search-box");
@@ -48,7 +47,6 @@
       else { map.setCenter(place.geometry.location); map.setZoom(20); }
     });
 
-    // Force drawing controls visible
     drawingManager = new google.maps.drawing.DrawingManager({
       drawingMode: google.maps.drawing.OverlayType.POLYLINE,
       drawingControl: true,
@@ -60,8 +58,7 @@
         strokeColor: '#FF0000',
         strokeOpacity: 1.0,
         strokeWeight: 5,
-        editable: true,
-        clickable: true
+        editable: true
       }
     });
 
