@@ -1,7 +1,5 @@
 let map, drawingManager, currentPolyline = null;
 let currentFeet = 0;
-let gateCount = 0;
-let gateMarkers = [];
 
 function initMap() {
   const mapElement = document.getElementById("map");
@@ -9,7 +7,8 @@ function initMap() {
 
   map = new google.maps.Map(mapElement, {
     center: { lat: 32.1313, lng: -81.2323 },
-    zoom: 19,
+    zoom: 20,
+    maxZoom: 22,
     mapTypeId: 'hybrid',
     tilt: 0,
     gestureHandling: 'greedy'
@@ -34,7 +33,7 @@ function setupAutocomplete() {
     if (!place.geometry || !place.geometry.location) return;
     
     map.setCenter(place.geometry.location);
-    map.setZoom(19);
+    map.setZoom(20);
   });
 }
 
@@ -50,7 +49,8 @@ function setupDrawingManager() {
       strokeColor: '#FF0000',
       strokeOpacity: 1.0,
       strokeWeight: 4,
-      editable: true
+      editable: true,
+      draggable: false
     }
   });
 
@@ -76,22 +76,13 @@ function bindPathListeners(path) {
 function calculateLength() {
   if (!currentPolyline) return;
   const path = currentPolyline.getPath();
-  const lengthInMeters = google.maps.geometry.spherical.computeLength(path);
-  currentFeet = Math.round(lengthInMeters * 3.28084);
+  if (path.getLength() < 2) {
+    currentFeet = 0;
+  } else {
+    const lengthInMeters = google.maps.geometry.spherical.computeLength(path);
+    currentFeet = Math.round(lengthInMeters * 3.28084);
+  }
   document.getElementById("footage-display").innerText = currentFeet;
-}
-
-function addGateMarker() {
-  gateCount++;
-  document.getElementById("gate-count").innerText = gateCount;
-
-  const marker = new google.maps.Marker({
-    position: map.getCenter(),
-    map: map,
-    draggable: true,
-    label: { text: "🚪", fontSize: "16px" }
-  });
-  gateMarkers.push(marker);
 }
 
 function undoLastPoint() {
@@ -108,13 +99,9 @@ function clearMap() {
   if (currentPolyline) {
     currentPolyline.setMap(null);
     currentPolyline = null;
-    currentFeet = 0;
-    document.getElementById("footage-display").innerText = "0";
   }
-  gateMarkers.forEach(m => m.setMap(null));
-  gateMarkers = [];
-  gateCount = 0;
-  document.getElementById("gate-count").innerText = "0";
+  currentFeet = 0;
+  document.getElementById("footage-display").innerText = "0";
 }
 
 function submitLead() {
@@ -134,8 +121,8 @@ function submitLead() {
 
   const baseMaterialCost = parseFloat(document.getElementById("material-select").value);
   const heightMultiplier = parseFloat(document.getElementById("height-select").value);
+  const gateCost = parseFloat(document.getElementById("gate-select").value);
   
-  const gateCost = gateCount * 250;
   const baseCost = ((currentFeet * baseMaterialCost) * heightMultiplier) + gateCost;
 
   const lowEnd = Math.round(baseCost * 0.90);
