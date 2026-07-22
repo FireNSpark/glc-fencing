@@ -39,19 +39,19 @@
     <div class="control-group">
       <label for="material-select">Fence Material</label>
       <select id="material-select">
-        <option value="25">Wood Privacy ($25/ft)</option>
-        <option value="35">Vinyl Privacy ($35/ft)</option>
-        <option value="20">Chain Link ($20/ft)</option>
-        <option value="45">Ornamental Aluminum ($45/ft)</option>
+        <option value="25">Wood Privacy</option>
+        <option value="35">Vinyl Privacy</option>
+        <option value="20">Chain Link</option>
+        <option value="45">Ornamental Aluminum</option>
       </select>
     </div>
     <div class="control-group">
       <label for="gate-select">Gates Needed</label>
       <select id="gate-select">
         <option value="0">0 Gates</option>
-        <option value="250">1 Gate ($250)</option>
-        <option value="500">2 Gates ($500)</option>
-        <option value="750">3 Gates ($750)</option>
+        <option value="250">1 Gate</option>
+        <option value="500">2 Gates</option>
+        <option value="750">3 Gates</option>
       </select>
     </div>
   </div>
@@ -60,7 +60,6 @@
     <h3>Total Linear Footage: <span id="footage-display">0</span> ft</h3>
   </div>
 
-  <!-- Lead Capture Form -->
   <div class="lead-form" id="form-container">
     <h3 style="margin-top:0;">Unlock Your Instant Estimate Range</h3>
     <div class="controls-grid">
@@ -80,7 +79,6 @@
     <button class="btn-submit" onclick="submitLead()">View Estimate Range</button>
   </div>
 
-  <!-- Results Box (Gated until form submission) -->
   <div id="result-container" class="stats-panel hidden" style="background: #e6f4f1; border: 1px solid #2b7a78;">
     <h3 style="color: #222;">Estimated Price Range</h3>
     <div class="price-range" id="price-display">$0 - $0</div>
@@ -103,13 +101,24 @@
     });
 
     const input = document.getElementById("search-box");
-    const autocomplete = new google.maps.places.Autocomplete(input);
+    const autocomplete = new google.maps.places.Autocomplete(input, {
+      types: ['address'],
+      componentRestrictions: { country: 'us' }
+    });
+
     autocomplete.bindTo("bounds", map);
     autocomplete.addListener("place_changed", () => {
       const place = autocomplete.getPlace();
-      if (!place.geometry || !place.geometry.location) return;
-      if (place.geometry.viewport) { map.fitBounds(place.geometry.viewport); } 
-      else { map.setCenter(place.geometry.location); map.setZoom(20); }
+      if (!place.geometry || !place.geometry.location) {
+        alert("No details available for input: '" + place.name + "'");
+        return;
+      }
+      if (place.geometry.viewport) { 
+        map.fitBounds(place.geometry.viewport); 
+      } else { 
+        map.setCenter(place.geometry.location); 
+        map.setZoom(20); 
+      }
     });
 
     drawingManager = new google.maps.drawing.DrawingManager({
