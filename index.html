@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>GLC Fencing - Instant Estimate Tool</title>
   <script async defer 
-    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDigtiw69XtU_EC1ke5cUJLtEUBQSTi9CE&libraries=places,geometry&v=weekly&callback=initMap">
+    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDigtiw69XtU_EC1ke5cUJLtEUBQSTi9CE&libraries=drawing,places,geometry&v=3.64&callback=initMap">
   </script>
   <style>
     body { font-family: Arial, sans-serif; margin: 0; padding: 15px; background: #f4f4f9; }
@@ -32,7 +32,7 @@
 
 <div class="container">
   <h2>GLC Fencing - Instant Estimate Tool</h2>
-  <p style="font-size: 14px; color: #555;">Search your address, then <b>tap on the map</b> along your property lines to place fence points.</p>
+  <p style="font-size: 14px; color: #555;">Search your address, tap the <b>zigzag icon</b> on top of the map to start drawing, and connect your property lines.</p>
   
   <input id="search-box" type="text" placeholder="Enter property address..." />
   <div id="map"></div>
@@ -96,10 +96,7 @@
 </div>
 
 <script>
-  let map;
-  let fencePolyline;
-  let pathArray;
-  let markers = [];
+  let map, drawingManager, currentPolyline = null;
   let currentFeet = 0;
 
   function initMap() {
@@ -107,25 +104,9 @@
       center: { lat: 32.1313, lng: -81.2323 },
       zoom: 20,
       mapTypeId: 'hybrid',
-      tilt: 0,
-      gestureHandling: 'greedy'
+      tilt: 0
     });
 
-    fencePolyline = new google.maps.Polyline({
-      strokeColor: '#FF0000',
-      strokeOpacity: 1.0,
-      strokeWeight: 4,
-      map: map
-    });
-
-    pathArray = fencePolyline.getPath();
-
-    // Map Click Handler: Place point instantly on tap
-    map.addListener('click', (e) => {
-      addPoint(e.latLng);
-    });
-
-    // Address Autocomplete
     const input = document.getElementById("search-box");
     const autocomplete = new google.maps.places.Autocomplete(input, {
       types: ['address'],
@@ -140,53 +121,64 @@
       map.setCenter(place.geometry.location); 
       map.setZoom(20); 
     });
-  }
 
-  function addPoint(latLng) {
-    pathArray.push(latLng);
-
-    const marker = new google.maps.Marker({
-      position: latLng,
-      map: map,
-      icon: {
-        path: google.maps.SymbolPath.CIRCLE,
-        scale: 5,
-        fillColor: '#FFFFFF',
-        fillOpacity: 1,
+    drawingManager = new google.maps.drawing.DrawingManager({
+      drawingMode: google.maps.drawing.OverlayType.POLYLINE,
+      drawingControl: true,
+      drawingControlOptions: {
+        position: google.maps.ControlPosition.TOP_CENTER,
+        drawingModes: [google.maps.drawing.OverlayType.POLYLINE]
+      },
+      polylineOptions: {
         strokeColor: '#FF0000',
-        strokeWeight: 2
+        strokeOpacity: 1.0,
+        strokeWeight: 5,
+        editable: true
       }
     });
 
-    markers.push(marker);
-    updateLength();
+    drawingManager.setMap(map);
+
+    google.maps.event.addListener(drawingManager, 'overlaycomplete', function(event) {
+      if (event.type === google.maps.drawing.OverlayType.POLYLINE) {
+        if (currentPolyline) currentPolyline.setMap(null);
+        currentPolyline = event.overlay;
+        
+        const path = currentPolyline.getPath();
+        calculateLength();
+
+        google.maps.event.addListener(path, 'set_at', calculateLength);
+        google.maps.event.addListener(path, 'insert_at', calculateLength);
+        google.maps.event.addListener(path, 'remove_at', calculateLength);
+      }
+    });
   }
 
-  function updateLength() {
-    if (pathArray.getLength() < 2) {
-      currentFeet = 0;
-    } else {
-      const lengthInMeters = google.maps.geometry.spherical.computeLength(pathArray);
-      currentFeet = Math.round(lengthInMeters * 3.28084);
-    }
+  function calculateLength() {
+    if (!currentPolyline) return;
+    const path = currentPolyline.getPath();
+    const lengthInMeters = google.maps.geometry.spherical.computeLength(path);
+    currentFeet = Math.round(lengthInMeters * 3.28084);
     document.getElementById("footage-display").innerText = currentFeet;
   }
 
   function undoLastPoint() {
-    if (pathArray.getLength() > 0) {
-      pathArray.pop();
-      const lastMarker = markers.pop();
-      if (lastMarker) lastMarker.setMap(null);
-      updateLength();
+    if (currentPolyline) {
+      const path = currentPolyline.getPath();
+      if (path.getLength() > 0) {
+        path.pop();
+        calculateLength();
+      }
     }
   }
 
   function clearMap() {
-    pathArray.clear();
-    markers.forEach(m => m.setMap(null));
-    markers = [];
-    currentFeet = 0;
-    document.getElementById("footage-display").innerText = "0";
+    if (currentPolyline) {
+      currentPolyline.setMap(null);
+      currentPolyline = null;
+      currentFeet = 0;
+      document.getElementById("footage-display").innerText = "0";
+    }
   }
 
   function submitLead() {
@@ -200,7 +192,7 @@
     }
 
     if (currentFeet === 0) {
-      alert("Please tap on the map to draw your fence line first.");
+      alert("Please draw your fence line on the map first.");
       return;
     }
 
