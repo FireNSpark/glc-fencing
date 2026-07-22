@@ -5,11 +5,11 @@ function initMap() {
   const mapElement = document.getElementById("map");
   if (!mapElement) return;
 
-  // Set minZoom to stop zooming out too far, but remove maxZoom cap entirely for unlimited close-up zoom
+  // Set initial zoom to 20 with uncapped high-resolution satellite imagery
   map = new google.maps.Map(mapElement, {
     center: { lat: 32.1313, lng: -81.2323 },
-    zoom: 19,
-    minZoom: 14,
+    zoom: 20,
+    maxZoom: 22,
     mapTypeId: 'hybrid',
     tilt: 0,
     gestureHandling: 'greedy'
@@ -34,7 +34,7 @@ function setupAutocomplete() {
     if (!place.geometry || !place.geometry.location) return;
     
     map.setCenter(place.geometry.location);
-    map.setZoom(19); // Default starting focus on the property
+    map.setZoom(20); // Focus directly on house at Zoom 20
   });
 }
 
@@ -57,52 +57,56 @@ function setupDrawingManager() {
 
   drawingManager.setMap(map);
 
+  // Live real-time path listener (updates footage as every point is dropped)
+  google.maps.event.addListener(drawingManager, 'polylinecomplete', function(polyline) {
+    if (currentPolyline) currentPolyline.setMap(null);
+    currentPolyline = polyline;
+    bindPathListeners(currentPolyline.getPath());
+  });
+
   google.maps.event.addListener(drawingManager, 'overlaycomplete', function(event) {
     if (event.type === google.maps.drawing.OverlayType.POLYLINE) {
       if (currentPolyline) currentPolyline.setMap(null);
       currentPolyline = event.overlay;
-      
       bindPathListeners(currentPolyline.getPath());
     }
   });
 }
 
 function bindPathListeners(path) {
-  calculateLength();
-  google.maps.event.addListener(path, 'insert_at', calculateLength);
-  google.maps.event.addListener(path, 'set_at', calculateLength);
-  google.maps.event.addListener(path, 'remove_at', calculateLength);
+  calculateLength(path);
+  google.maps.event.addListener(path, 'insert_at', () => calculateLength(path));
+  google.maps.event.addListener(path, 'set_at', () => calculateLength(path));
+  google.maps.event.addListener(path, 'remove_at', () => calculateLength(path));
 }
 
-function calculateLength() {
-  if (!currentPolyline) return;
-  const path = currentPolyline.getPath();
+function calculateLength(path) {
+  if (!path) {
+    if (currentPolyline) path = currentPolyline.getPath();
+    else return;
+  }
+
   if (path.getLength() < 2) {
     currentFeet = 0;
   } else {
     const lengthInMeters = google.maps.geometry.spherical.computeLength(path);
     currentFeet = Math.round(lengthInMeters * 3.28084);
   }
+  
   document.getElementById("footage-display").innerText = currentFeet;
 }
 
-// Fixed Instant Undo (Disables active drawing state first to prevent touch lag)
 function undoLastPoint() {
-  if (drawingManager) drawingManager.setDrawingMode(null);
-  
   if (currentPolyline) {
     const path = currentPolyline.getPath();
     if (path.getLength() > 0) {
       path.pop();
-      calculateLength();
+      calculateLength(path);
     }
   }
 }
 
-// Fixed Instant Clear
 function clearMap() {
-  if (drawingManager) drawingManager.setDrawingMode(null);
-
   if (currentPolyline) {
     currentPolyline.setMap(null);
     currentPolyline = null;
