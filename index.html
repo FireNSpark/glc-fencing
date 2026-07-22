@@ -11,8 +11,14 @@
     body { font-family: Arial, sans-serif; margin: 0; padding: 15px; background: #f4f4f9; }
     .container { max-width: 900px; margin: auto; background: #fff; padding: 15px; border-radius: 8px; }
     #search-box { width: 100%; padding: 12px; font-size: 16px; box-sizing: border-box; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 4px; }
-    #map { height: 450px; width: 100%; border-radius: 6px; }
-    .stats-panel { margin-top: 15px; padding: 15px; background: #eef2f5; border-radius: 6px; text-align: center; font-size: 18px; font-weight: bold; }
+    #map { height: 400px; width: 100%; border-radius: 6px; margin-bottom: 15px; }
+    .controls-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px; }
+    .control-group { display: flex; flex-direction: column; }
+    .control-group label { font-weight: bold; margin-bottom: 5px; font-size: 13px; }
+    .control-group select { padding: 10px; font-size: 14px; border-radius: 4px; border: 1px solid #ccc; }
+    .stats-panel { padding: 15px; background: #eef2f5; border-radius: 6px; text-align: center; }
+    .stats-panel h3 { margin: 0 0 5px 0; color: #333; font-size: 16px; }
+    .price-range { font-size: 22px; color: #2b7a78; font-weight: bold; }
   </style>
 </head>
 <body>
@@ -21,13 +27,37 @@
   <h2>GLC Fencing - Draw Your Fence</h2>
   <input id="search-box" type="text" placeholder="Enter address..." />
   <div id="map"></div>
+
+  <div class="controls-grid">
+    <div class="control-group">
+      <label for="material-select">Material</label>
+      <select id="material-select" onchange="calculateEstimate()">
+        <option value="25">Wood Privacy ($25/ft)</option>
+        <option value="35">Vinyl Privacy ($35/ft)</option>
+        <option value="20">Chain Link ($20/ft)</option>
+        <option value="45">Aluminum ($45/ft)</option>
+      </select>
+    </div>
+    <div class="control-group">
+      <label for="gate-select">Gates</label>
+      <select id="gate-select" onchange="calculateEstimate()">
+        <option value="0">0 Gates</option>
+        <option value="250">1 Gate ($250)</option>
+        <option value="500">2 Gates ($500)</option>
+        <option value="750">3 Gates ($750)</option>
+      </select>
+    </div>
+  </div>
+
   <div class="stats-panel">
-    Total Linear Feet: <span id="footage-display">0</span> ft
+    <h3>Linear Footage: <span id="footage-display">0</span> ft</h3>
+    <div class="price-range" id="price-display">$0 - $0</div>
   </div>
 </div>
 
 <script>
   let map, drawingManager, currentPolyline = null;
+  let currentFeet = 0;
 
   function initMap() {
     map = new google.maps.Map(document.getElementById("map"), {
@@ -79,8 +109,24 @@
   function calculateLength(polyline) {
     const path = polyline.getPath();
     const lengthInMeters = google.maps.geometry.spherical.computeLength(path);
-    const lengthInFeet = Math.round(lengthInMeters * 3.28084);
-    document.getElementById("footage-display").innerText = lengthInFeet;
+    currentFeet = Math.round(lengthInMeters * 3.28084);
+    document.getElementById("footage-display").innerText = currentFeet;
+    calculateEstimate();
+  }
+
+  function calculateEstimate() {
+    const costPerFoot = parseFloat(document.getElementById("material-select").value);
+    const gateCost = parseFloat(document.getElementById("gate-select").value);
+    const baseCost = (currentFeet * costPerFoot) + gateCost;
+    
+    const lowEnd = Math.round(baseCost * 0.90);
+    const highEnd = Math.round(baseCost * 1.10);
+
+    if (currentFeet > 0) {
+      document.getElementById("price-display").innerText = `$${lowEnd.toLocaleString()} - $${highEnd.toLocaleString()}`;
+    } else {
+      document.getElementById("price-display").innerText = "$0 - $0";
+    }
   }
 </script>
 
