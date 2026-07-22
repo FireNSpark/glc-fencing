@@ -104,7 +104,8 @@
       center: { lat: 32.1313, lng: -81.2323 },
       zoom: 20,
       mapTypeId: 'hybrid',
-      tilt: 0
+      tilt: 0,
+      gestureHandling: 'greedy'
     });
 
     const input = document.getElementById("search-box");
@@ -123,7 +124,7 @@
     });
 
     drawingManager = new google.maps.drawing.DrawingManager({
-      drawingMode: google.maps.drawing.OverlayType.POLYLINE,
+      drawingMode: null,
       drawingControl: true,
       drawingControlOptions: {
         position: google.maps.ControlPosition.TOP_CENTER,
@@ -139,26 +140,30 @@
 
     drawingManager.setMap(map);
 
-    google.maps.event.addListener(drawingManager, 'overlaycomplete', function(event) {
-      if (event.type === google.maps.drawing.OverlayType.POLYLINE) {
-        if (currentPolyline) currentPolyline.setMap(null);
-        currentPolyline = event.overlay;
-        
-        const path = currentPolyline.getPath();
-        calculateLength();
+    // Listen for line updates directly while drawing
+    google.maps.event.addListener(drawingManager, 'polylinecomplete', function(polyline) {
+      if (currentPolyline) currentPolyline.setMap(null);
+      currentPolyline = polyline;
+      drawingManager.setDrawingMode(null); // Turn off drawing mode when complete
 
-        google.maps.event.addListener(path, 'set_at', calculateLength);
-        google.maps.event.addListener(path, 'insert_at', calculateLength);
-        google.maps.event.addListener(path, 'remove_at', calculateLength);
-      }
+      const path = currentPolyline.getPath();
+      calculateLength();
+
+      google.maps.event.addListener(path, 'set_at', calculateLength);
+      google.maps.event.addListener(path, 'insert_at', calculateLength);
+      google.maps.event.addListener(path, 'remove_at', calculateLength);
     });
   }
 
   function calculateLength() {
     if (!currentPolyline) return;
     const path = currentPolyline.getPath();
-    const lengthInMeters = google.maps.geometry.spherical.computeLength(path);
-    currentFeet = Math.round(lengthInMeters * 3.28084);
+    if (path.getLength() < 2) {
+      currentFeet = 0;
+    } else {
+      const lengthInMeters = google.maps.geometry.spherical.computeLength(path);
+      currentFeet = Math.round(lengthInMeters * 3.28084);
+    }
     document.getElementById("footage-display").innerText = currentFeet;
   }
 
