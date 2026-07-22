@@ -5,10 +5,11 @@ function initMap() {
   const mapElement = document.getElementById("map");
   if (!mapElement) return;
 
+  // Set minZoom to stop zooming out too far, but remove maxZoom cap entirely for unlimited close-up zoom
   map = new google.maps.Map(mapElement, {
     center: { lat: 32.1313, lng: -81.2323 },
-    zoom: 20,
-    maxZoom: 22,
+    zoom: 19,
+    minZoom: 14,
     mapTypeId: 'hybrid',
     tilt: 0,
     gestureHandling: 'greedy'
@@ -33,7 +34,7 @@ function setupAutocomplete() {
     if (!place.geometry || !place.geometry.location) return;
     
     map.setCenter(place.geometry.location);
-    map.setZoom(20);
+    map.setZoom(19); // Default starting focus on the property
   });
 }
 
@@ -85,7 +86,10 @@ function calculateLength() {
   document.getElementById("footage-display").innerText = currentFeet;
 }
 
+// Fixed Instant Undo (Disables active drawing state first to prevent touch lag)
 function undoLastPoint() {
+  if (drawingManager) drawingManager.setDrawingMode(null);
+  
   if (currentPolyline) {
     const path = currentPolyline.getPath();
     if (path.getLength() > 0) {
@@ -95,7 +99,10 @@ function undoLastPoint() {
   }
 }
 
+// Fixed Instant Clear
 function clearMap() {
+  if (drawingManager) drawingManager.setDrawingMode(null);
+
   if (currentPolyline) {
     currentPolyline.setMap(null);
     currentPolyline = null;
