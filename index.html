@@ -2,99 +2,149 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>GLC Fencing - Instant Estimate Tool</title>
   <script async defer 
     src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDigtiw69XtU_EC1ke5cUJLtEUBQSTi9CE&libraries=drawing,places,geometry&v=3.64&callback=initMap">
   </script>
   <style>
-    body { font-family: Arial, sans-serif; margin: 0; padding: 15px; background: #f4f4f9; }
-    .container { max-width: 900px; margin: auto; background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-    #search-box { width: 100%; padding: 12px; font-size: 16px; box-sizing: border-box; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 4px; }
-    #map { height: 380px; width: 100%; border-radius: 6px; margin-bottom: 10px; }
-    .map-tools { display: flex; gap: 10px; margin-bottom: 15px; }
-    .btn-tool { flex: 1; padding: 12px; font-size: 14px; font-weight: bold; border: 1px solid #ccc; background: #fff; border-radius: 4px; cursor: pointer; }
-    .controls-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px; }
-    .control-group { display: flex; flex-direction: column; }
-    .control-group label { font-weight: bold; margin-bottom: 5px; font-size: 13px; }
-    .control-group select, .control-group input { padding: 10px; font-size: 14px; border-radius: 4px; border: 1px solid #ccc; }
-    .stats-panel { padding: 15px; background: #eef2f5; border-radius: 6px; text-align: center; margin-bottom: 15px; }
-    .price-range { font-size: 26px; color: #2b7a78; font-weight: bold; margin-top: 10px; }
-    .lead-form { background: #fafafa; padding: 15px; border: 1px solid #ddd; border-radius: 6px; }
-    .btn-submit { width: 100%; padding: 14px; background: #2b7a78; color: white; font-size: 16px; font-weight: bold; border: none; border-radius: 4px; cursor: pointer; margin-top: 10px; }
-    .hidden { display: none; }
+    * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+    body { margin: 0; padding: 15px; background: #f0f2f5; color: #1c1e21; }
+    .wizard-card { max-width: 800px; margin: auto; background: #ffffff; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); padding: 25px; }
+    
+    /* Progress Bar */
+    .progress-bar { display: flex; justify-content: space-between; margin-bottom: 25px; border-bottom: 2px solid #e4e6eb; padding-bottom: 15px; }
+    .step-indicator { flex: 1; text-align: center; font-size: 13px; font-weight: 600; color: #8a8d91; position: relative; }
+    .step-indicator.active { color: #2b7a78; }
+    .step-indicator.active::after { content: ''; position: absolute; bottom: -17px; left: 0; width: 100%; height: 3px; background: #2b7a78; }
+    
+    /* Step Containers */
+    .step-content { display: none; }
+    .step-content.active { display: block; }
+    
+    h2 { margin-top: 0; font-size: 22px; color: #111; }
+    p.subtitle { color: #606770; font-size: 14px; margin-bottom: 20px; }
+    
+    /* Inputs & Buttons */
+    .input-field { width: 100%; padding: 14px; font-size: 16px; border: 1px solid #ccd0d5; border-radius: 8px; margin-bottom: 15px; outline: none; }
+    .input-field:focus { border-color: #2b7a78; box-shadow: 0 0 0 2px rgba(43,122,120,0.2); }
+    
+    .btn-primary { width: 100%; padding: 15px; background: #2b7a78; color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; transition: background 0.2s; }
+    .btn-primary:hover { background: #205c5a; }
+    .btn-secondary { background: #e4e6eb; color: #4b4f56; margin-top: 10px; }
+    
+    /* Map Layout */
+    .map-container { position: relative; width: 100%; height: 420px; border-radius: 8px; overflow: hidden; margin-bottom: 15px; }
+    #map { width: 100%; height: 100%; }
+    
+    .floating-tools { position: absolute; top: 12px; left: 50%; transform: translateX(-50%); display: flex; gap: 8px; z-index: 5; background: rgba(255,255,255,0.95); padding: 6px; border-radius: 30px; box-shadow: 0 2px 10px rgba(0,0,0,0.15); }
+    .btn-float { padding: 8px 14px; font-size: 13px; font-weight: 600; border: none; background: #f0f2f5; border-radius: 20px; cursor: pointer; color: #1c1e21; }
+    .btn-float.danger { background: #ffebe9; color: #d9381e; }
+    .btn-float.gate { background: #e6f4f1; color: #2b7a78; }
+
+    /* Material Selector Cards */
+    .grid-options { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px; }
+    .option-card { border: 2px solid #e4e6eb; border-radius: 8px; padding: 15px; text-align: center; cursor: pointer; transition: all 0.2s; }
+    .option-card.selected { border-color: #2b7a78; background: #f0f7f6; }
+    .option-card h4 { margin: 0 0 5px 0; font-size: 15px; }
+    
+    .stats-badge { background: #f0f7f6; border: 1px solid #2b7a78; color: #2b7a78; padding: 12px; border-radius: 8px; text-align: center; font-weight: bold; font-size: 16px; margin-bottom: 15px; }
+    .price-output { font-size: 32px; color: #2b7a78; font-weight: 800; text-align: center; margin: 15px 0; }
   </style>
 </head>
 <body>
 
-<div class="container">
-  <h2>GLC Fencing - Instant Estimate Tool</h2>
-  <p style="font-size: 14px; color: #555;">Enter property address to focus on the house. Tap the <b>zigzag line icon</b> on the map to begin placing points.</p>
-  
-  <input id="search-box" type="text" placeholder="Enter property address..." />
-  <div id="map"></div>
-
-  <div class="map-tools">
-    <button class="btn-tool" type="button" onclick="undoLastPoint()">↩ Undo Point</button>
-    <button class="btn-tool" type="button" onclick="clearMap()">🗑️ Clear Line</button>
+<div class="wizard-card">
+  <!-- Progress Header -->
+  <div class="progress-bar">
+    <div class="step-indicator active" id="ind-1">1. Address</div>
+    <div class="step-indicator" id="ind-2">2. Draw Line</div>
+    <div class="step-indicator" id="ind-3">3. Options</div>
+    <div class="step-indicator" id="ind-4">4. Estimate</div>
   </div>
 
-  <div class="controls-grid">
-    <div class="control-group">
-      <label for="material-select">Fence Material</label>
-      <select id="material-select">
-        <option value="25">Wood Privacy</option>
-        <option value="35">Vinyl Privacy</option>
-        <option value="20">Chain Link</option>
-        <option value="45">Ornamental Aluminum</option>
-      </select>
-    </div>
-    <div class="control-group">
-      <label for="gate-select">Gates Needed</label>
-      <select id="gate-select">
-        <option value="0">0 Gates</option>
-        <option value="250">1 Gate</option>
-        <option value="500">2 Gates</option>
-        <option value="750">3 Gates</option>
-      </select>
-    </div>
+  <!-- STEP 1: Address Search -->
+  <div class="step-content active" id="step-1">
+    <h2>Where is the fence being installed?</h2>
+    <p class="subtitle">Enter your property address to load high-resolution satellite mapping.</p>
+    <input id="search-box" class="input-field" type="text" placeholder="Start typing address..." />
+    <button class="btn-primary" onclick="goToStep(2)">Continue to Mapping →</button>
   </div>
 
-  <div class="stats-panel">
-    <h3>Total Linear Footage: <span id="footage-display">0</span> ft</h3>
-  </div>
-
-  <div class="lead-form" id="form-container">
-    <h3 style="margin-top:0;">Unlock Your Instant Estimate Range</h3>
-    <div class="controls-grid">
-      <div class="control-group">
-        <label>Full Name</label>
-        <input type="text" id="lead-name" placeholder="John Doe" required />
+  <!-- STEP 2: Map Drawing -->
+  <div class="step-content" id="step-2">
+    <h2>Draw Your Fence Boundary</h2>
+    <p class="subtitle">Tap on the satellite map to trace your fence line. Place gates where needed.</p>
+    
+    <div class="map-container">
+      <div class="floating-tools">
+        <button class="btn-float gate" onclick="addGateMarker()">+ Add Gate (<span id="gate-count">0</span>)</button>
+        <button class="btn-float" onclick="undoLastPoint()">↩ Undo</button>
+        <button class="btn-float danger" onclick="clearMap()">🗑️ Clear</button>
       </div>
-      <div class="control-group">
-        <label>Phone Number</label>
-        <input type="tel" id="lead-phone" placeholder="(912) 555-0199" required />
-      </div>
+      <div id="map"></div>
     </div>
-    <div class="control-group" style="margin-top: 10px;">
-      <label>Email Address</label>
-      <input type="email" id="lead-email" placeholder="john@example.com" required />
-    </div>
-    <button class="btn-submit" type="button" onclick="submitLead()">View Estimate Range</button>
+
+    <div class="stats-badge">Total Footage: <span id="footage-display">0</span> ft</div>
+    <button class="btn-primary" onclick="goToStep(3)">Choose Fence Material →</button>
+    <button class="btn-primary btn-secondary" onclick="goToStep(1)">← Back</button>
   </div>
 
-  <div id="result-container" class="stats-panel hidden" style="background: #e6f4f1; border: 1px solid #2b7a78;">
-    <h3 style="color: #222;">Estimated Price Range</h3>
-    <div class="price-range" id="price-display">$0 - $0</div>
+  <!-- STEP 3: Material Options -->
+  <div class="step-content" id="step-3">
+    <h2>Select Fence Style</h2>
+    <p class="subtitle">Choose your preferred material type for this project.</p>
+    
+    <div class="grid-options">
+      <div class="option-card selected" onclick="selectMaterial(this, 25)">
+        <h4>Wood Privacy</h4>
+      </div>
+      <div class="option-card" onclick="selectMaterial(this, 35)">
+        <h4>Vinyl Privacy</h4>
+      </div>
+      <div class="option-card" onclick="selectMaterial(this, 20)">
+        <h4>Chain Link</h4>
+      </div>
+      <div class="option-card" onclick="selectMaterial(this, 45)">
+        <h4>Ornamental Aluminum</h4>
+      </div>
+    </div>
+
+    <button class="btn-primary" onclick="goToStep(4)">Review Final Estimate →</button>
+    <button class="btn-primary btn-secondary" onclick="goToStep(2)">← Back to Map</button>
+  </div>
+
+  <!-- STEP 4: Lead Form & Estimate Output -->
+  <div class="step-content" id="step-4">
+    <div id="form-container">
+      <h2>Unlock Instant Price Range</h2>
+      <p class="subtitle">Enter your details to generate your customized instant budget summary.</p>
+      
+      <input class="input-field" type="text" id="lead-name" placeholder="Full Name" />
+      <input class="input-field" type="tel" id="lead-phone" placeholder="Phone Number" />
+      <input class="input-field" type="email" id="lead-email" placeholder="Email Address" />
+      
+      <button class="btn-primary" onclick="calculateAndShowEstimate()">View My Estimate</button>
+      <button class="btn-primary btn-secondary" onclick="goToStep(3)">← Back</button>
+    </div>
+
+    <div id="result-container" style="display:none;">
+      <h2>Your Estimated Investment</h2>
+      <div class="price-output" id="price-display">$0 - $0</div>
+      <div class="stats-badge" style="background:#fff;">Summary: <span id="summary-footage">0</span> ft line with <span id="summary-gates">0</span> gate(s).</div>
+      <p class="subtitle" style="text-align:center;">Thank you! A copy of this estimate has been logged for our team. We will reach out shortly to confirm project specifications.</p>
+    </div>
   </div>
 </div>
 
 <script>
-  let map, drawingManager, currentPolyline = null;
+  let map, currentPolyline = null;
   let currentFeet = 0;
+  let selectedMaterialCost = 25;
+  let gateCount = 0;
+  let gateMarkers = [];
 
   function initMap() {
-    // Mobile optimized initialization without touch locks
     map = new google.maps.Map(document.getElementById("map"), {
       center: { lat: 32.1313, lng: -81.2323 },
       zoom: 19,
@@ -117,23 +167,17 @@
     autocomplete.addListener("place_changed", () => {
       const place = autocomplete.getPlace();
       if (!place.geometry || !place.geometry.location) return;
-      
-      // Center on house at zoom 19, allowing free manual zoom in/out from there
       map.setCenter(place.geometry.location);
       map.setZoom(19);
     });
   }
 
   function setupDrawingManager() {
-    drawingManager = new google.maps.drawing.DrawingManager({
-      drawingMode: null,
-      drawingControl: true,
-      drawingControlOptions: {
-        position: google.maps.ControlPosition.TOP_CENTER,
-        drawingModes: [google.maps.drawing.OverlayType.POLYLINE]
-      },
+    const drawingManager = new google.maps.drawing.DrawingManager({
+      drawingMode: google.maps.drawing.OverlayType.POLYLINE,
+      drawingControl: false,
       polylineOptions: {
-        strokeColor: '#FF0000',
+        strokeColor: '#2b7a78',
         strokeOpacity: 1.0,
         strokeWeight: 4,
         editable: true
@@ -165,6 +209,19 @@
     document.getElementById("footage-display").innerText = currentFeet;
   }
 
+  function addGateMarker() {
+    gateCount++;
+    document.getElementById("gate-count").innerText = gateCount;
+    
+    const marker = new google.maps.Marker({
+      position: map.getCenter(),
+      map: map,
+      draggable: true,
+      label: { text: "🚪", fontSize: "18px" }
+    });
+    gateMarkers.push(marker);
+  }
+
   function undoLastPoint() {
     if (currentPolyline) {
       const path = currentPolyline.getPath();
@@ -182,33 +239,55 @@
       currentFeet = 0;
       document.getElementById("footage-display").innerText = "0";
     }
+    gateMarkers.forEach(m => m.setMap(null));
+    gateMarkers = [];
+    gateCount = 0;
+    document.getElementById("gate-count").innerText = "0";
   }
 
-  function submitLead() {
+  function goToStep(stepNumber) {
+    document.querySelectorAll('.step-content').forEach(el => el.classList.remove('active'));
+    document.querySelectorAll('.step-indicator').forEach(el => el.classList.remove('active'));
+    
+    document.getElementById(`step-${stepNumber}`).classList.add('active');
+    document.getElementById(`ind-${stepNumber}`).classList.add('active');
+
+    if (stepNumber === 2) {
+      setTimeout(() => google.maps.event.trigger(map, 'resize'), 100);
+    }
+  }
+
+  function selectMaterial(cardElement, cost) {
+    document.querySelectorAll('.option-card').forEach(el => el.classList.remove('selected'));
+    cardElement.classList.add('selected');
+    selectedMaterialCost = cost;
+  }
+
+  function calculateAndShowEstimate() {
     const name = document.getElementById("lead-name").value;
     const phone = document.getElementById("lead-phone").value;
     const email = document.getElementById("lead-email").value;
 
     if (!name || !phone || !email) {
-      alert("Please fill out all contact fields to unlock your estimate.");
+      alert("Please complete all contact details.");
       return;
     }
 
     if (currentFeet === 0) {
-      alert("Please draw your fence line on the map first.");
+      alert("Please draw your fence line on Step 2 first.");
       return;
     }
 
-    const costPerFoot = parseFloat(document.getElementById("material-select").value);
-    const gateCost = parseFloat(document.getElementById("gate-select").value);
-    const baseCost = (currentFeet * costPerFoot) + gateCost;
-
+    const baseCost = (currentFeet * selectedMaterialCost) + (gateCount * 250);
     const lowEnd = Math.round(baseCost * 0.90);
     const highEnd = Math.round(baseCost * 1.10);
 
     document.getElementById("price-display").innerText = `$${lowEnd.toLocaleString()} - $${highEnd.toLocaleString()}`;
-    document.getElementById("form-container").classList.add("hidden");
-    document.getElementById("result-container").classList.remove("hidden");
+    document.getElementById("summary-footage").innerText = currentFeet;
+    document.getElementById("summary-gates").innerText = gateCount;
+
+    document.getElementById("form-container").style.display = "none";
+    document.getElementById("result-container").style.display = "block";
   }
 </script>
 
