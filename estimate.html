@@ -7,7 +7,7 @@
   <link rel="stylesheet" href="styles.css" />
   <script src="app.js"></script>
   <script async defer 
-    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDigtiw69XtU_EC1ke5cUJLtEUBQSTi9CE&libraries=drawing,places,geometry&v=3.64&callback=initMap">
+    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDigtiw69XtU_EC1ke5cUJLtEUBQSTi9CE&libraries=places,geometry&v=3.64&callback=initMap">
   </script>
 </head>
 <body class="workspace-body">
@@ -27,7 +27,7 @@
     <!-- Step 2: Map Drawing -->
     <div class="step-card">
       <label class="section-label">Step 2: Draw Fence Line</label>
-      <p class="instruction-text">Tap the <b>zigzag icon</b> on top of the map to begin drawing along your property line.</p>
+      <p class="instruction-text">Tap anywhere on the satellite map to start placing points along your property boundary.</p>
       
       <div id="map"></div>
 
@@ -60,14 +60,24 @@
             <option value="1.2" selected>6 Feet</option>
           </select>
         </div>
-        <div class="control-group" style="grid-column: span 2;">
-          <label for="gate-select">Number of Gates</label>
-          <select id="gate-select" class="input-field">
-            <option value="0">0 Gates</option>
-            <option value="250">1 Gate</option>
-            <option value="500">2 Gates</option>
-            <option value="750">3 Gates</option>
-            <option value="1000">4 Gates</option>
+        <div class="control-group">
+          <label for="single-gate-select">Single Gates</label>
+          <select id="single-gate-select" class="input-field">
+            <option value="0">0 Single Gates</option>
+            <option value="250">1 Single Gate</option>
+            <option value="500">2 Single Gates</option>
+            <option value="750">3 Single Gates</option>
+            <option value="1000">4 Single Gates</option>
+          </select>
+        </div>
+        <div class="control-group">
+          <label for="double-gate-select">Double Gates</label>
+          <select id="double-gate-select" class="input-field">
+            <option value="0">0 Double Gates</option>
+            <option value="450">1 Double Gate</option>
+            <option value="900">2 Double Gates</option>
+            <option value="1350">3 Double Gates</option>
+            <option value="1800">4 Double Gates</option>
           </select>
         </div>
       </div>

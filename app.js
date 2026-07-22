@@ -7,11 +7,11 @@ function initMap() {
   const mapElement = document.getElementById("map");
   if (!mapElement) return;
 
-  // Initialize map with unlocked maximum satellite zoom
+  // Initialize map with maxZoom forced to 24 to allow extreme close-up pinch zoom
   map = new google.maps.Map(mapElement, {
     center: { lat: 32.1313, lng: -81.2323 },
     zoom: 20,
-    maxZoom: 22,
+    maxZoom: 24,
     minZoom: 1,
     mapTypeId: 'hybrid',
     tilt: 0,
@@ -104,9 +104,10 @@ function submitLead() {
 
   const baseMaterialCost = parseFloat(document.getElementById("material-select").value);
   const heightMultiplier = parseFloat(document.getElementById("height-select").value);
-  const gateCost = parseFloat(document.getElementById("gate-select").value);
+  const singleGateCost = parseFloat(document.getElementById("single-gate-select").value);
+  const doubleGateCost = parseFloat(document.getElementById("double-gate-select").value);
 
-  const baseCost = ((currentFeet * baseMaterialCost) * heightMultiplier) + gateCost;
+  const baseCost = ((currentFeet * baseMaterialCost) * heightMultiplier) + singleGateCost + doubleGateCost;
 
   const lowEnd = Math.round(baseCost * 0.90);
   const highEnd = Math.round(baseCost * 1.10);
