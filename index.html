@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>GLC Fencing - Instant Estimate Tool</title>
   <script async defer 
     src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDigtiw69XtU_EC1ke5cUJLtEUBQSTi9CE&libraries=drawing,places,geometry&v=3.64&callback=initMap">
@@ -12,7 +12,10 @@
     .container { max-width: 900px; margin: auto; background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
     h2 { margin-top: 0; color: #222; }
     #search-box { width: 100%; padding: 12px; font-size: 16px; box-sizing: border-box; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 4px; }
-    #map { height: 380px; width: 100%; border-radius: 6px; margin-bottom: 15px; }
+    #map { height: 380px; width: 100%; border-radius: 6px; margin-bottom: 10px; }
+    .map-tools { display: flex; gap: 10px; margin-bottom: 15px; }
+    .btn-tool { flex: 1; padding: 10px; font-size: 14px; font-weight: bold; border: 1px solid #ccc; background: #fff; border-radius: 4px; cursor: pointer; }
+    .btn-tool:active { background: #eee; }
     .controls-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px; }
     .control-group { display: flex; flex-direction: column; }
     .control-group label { font-weight: bold; margin-bottom: 5px; font-size: 13px; }
@@ -22,7 +25,6 @@
     .price-range { font-size: 26px; color: #2b7a78; font-weight: bold; margin-top: 10px; }
     .lead-form { background: #fafafa; padding: 15px; border: 1px solid #ddd; border-radius: 6px; }
     .btn-submit { width: 100%; padding: 12px; background: #2b7a78; color: white; font-size: 16px; font-weight: bold; border: none; border-radius: 4px; cursor: pointer; margin-top: 10px; }
-    .btn-submit:hover { background: #205c5a; }
     .hidden { display: none; }
   </style>
 </head>
@@ -30,10 +32,15 @@
 
 <div class="container">
   <h2>GLC Fencing - Instant Estimate Tool</h2>
-  <p style="font-size: 14px; color: #555;">Search your address, tap the <b>zigzag icon</b> on the map to draw your fence line, and configure your options below.</p>
+  <p style="font-size: 14px; color: #555;">Enter your address, select the <b>zigzag icon</b> on the map, and tap along your property boundaries to draw your fence line.</p>
   
   <input id="search-box" type="text" placeholder="Enter property address..." />
   <div id="map"></div>
+
+  <div class="map-tools">
+    <button class="btn-tool" onclick="undoLastPoint()">↩ Undo Last Point</button>
+    <button class="btn-tool" onclick="clearMap()">🗑️ Clear Line</button>
+  </div>
 
   <div class="controls-grid">
     <div class="control-group">
@@ -95,7 +102,7 @@
   function initMap() {
     map = new google.maps.Map(document.getElementById("map"), {
       center: { lat: 32.1313, lng: -81.2323 },
-      zoom: 19,
+      zoom: 20,
       mapTypeId: 'hybrid',
       tilt: 0
     });
@@ -109,16 +116,10 @@
     autocomplete.bindTo("bounds", map);
     autocomplete.addListener("place_changed", () => {
       const place = autocomplete.getPlace();
-      if (!place.geometry || !place.geometry.location) {
-        alert("No details available for input: '" + place.name + "'");
-        return;
-      }
-      if (place.geometry.viewport) { 
-        map.fitBounds(place.geometry.viewport); 
-      } else { 
-        map.setCenter(place.geometry.location); 
-        map.setZoom(20); 
-      }
+      if (!place.geometry || !place.geometry.location) return;
+      
+      map.setCenter(place.geometry.location); 
+      map.setZoom(20); 
     });
 
     drawingManager = new google.maps.drawing.DrawingManager({
@@ -142,19 +143,45 @@
       if (event.type === google.maps.drawing.OverlayType.POLYLINE) {
         if (currentPolyline) currentPolyline.setMap(null);
         currentPolyline = event.overlay;
+        
+        bindPathEvents(currentPolyline.getPath());
         calculateLength(currentPolyline);
-
-        google.maps.event.addListener(currentPolyline.getPath(), 'set_at', () => calculateLength(currentPolyline));
-        google.maps.event.addListener(currentPolyline.getPath(), 'insert_at', () => calculateLength(currentPolyline));
       }
     });
   }
 
+  function bindPathEvents(path) {
+    calculateLength(currentPolyline);
+    google.maps.event.addListener(path, 'set_at', () => calculateLength(currentPolyline));
+    google.maps.event.addListener(path, 'insert_at', () => calculateLength(currentPolyline));
+    google.maps.event.addListener(path, 'remove_at', () => calculateLength(currentPolyline));
+  }
+
   function calculateLength(polyline) {
+    if (!polyline) return;
     const path = polyline.getPath();
     const lengthInMeters = google.maps.geometry.spherical.computeLength(path);
     currentFeet = Math.round(lengthInMeters * 3.28084);
     document.getElementById("footage-display").innerText = currentFeet;
+  }
+
+  function undoLastPoint() {
+    if (currentPolyline) {
+      const path = currentPolyline.getPath();
+      if (path.getLength() > 0) {
+        path.pop();
+        calculateLength(currentPolyline);
+      }
+    }
+  }
+
+  function clearMap() {
+    if (currentPolyline) {
+      currentPolyline.setMap(null);
+      currentPolyline = null;
+      currentFeet = 0;
+      document.getElementById("footage-display").innerText = "0";
+    }
   }
 
   function submitLead() {
