@@ -3,254 +3,43 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>GLC Fencing - Instant Estimate Tool</title>
-  <script async defer 
-    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDigtiw69XtU_EC1ke5cUJLtEUBQSTi9CE&libraries=drawing,places,geometry&v=3.64&callback=initMap">
-  </script>
-  <style>
-    * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
-    body { margin: 0; padding: 15px; background: #f4f4f9; color: #222; }
-    .container { max-width: 850px; margin: auto; background: #fff; padding: 20px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.08); }
-    
-    .header { text-align: center; margin-bottom: 20px; }
-    .header h1 { margin: 0 0 5px 0; font-size: 24px; color: #2b7a78; }
-    .header p { margin: 0; font-size: 14px; color: #666; }
-
-    #search-box { width: 100%; padding: 14px; font-size: 16px; border: 1px solid #ccc; border-radius: 6px; margin-bottom: 12px; }
-    #map { height: 400px; width: 100%; border-radius: 6px; }
-
-    .tool-bar-bottom { display: flex; gap: 10px; margin: 10px 0 15px 0; }
-    .btn-action { flex: 1; padding: 12px; font-size: 14px; font-weight: bold; border: 1px solid #ccc; background: #fff; border-radius: 6px; cursor: pointer; }
-    .btn-action.gate { background: #e6f4f1; border-color: #2b7a78; color: #2b7a78; }
-    .btn-action.danger { background: #fdf2f2; border-color: #d9381e; color: #d9381e; }
-
-    .controls-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 15px; }
-    .control-group { display: flex; flex-direction: column; }
-    .control-group label { font-weight: bold; margin-bottom: 5px; font-size: 13px; color: #444; }
-    .control-group select, .control-group input { padding: 12px; font-size: 14px; border-radius: 6px; border: 1px solid #ccc; }
-
-    .stats-panel { padding: 15px; background: #f0f7f6; border: 1px solid #2b7a78; border-radius: 6px; text-align: center; margin-bottom: 15px; }
-    .stats-panel h3 { margin: 0; color: #222; font-size: 18px; }
-    
-    .lead-form { background: #fafafa; padding: 18px; border: 1px solid #e0e0e0; border-radius: 6px; }
-    .btn-submit { width: 100%; padding: 15px; background: #2b7a78; color: white; font-size: 16px; font-weight: bold; border: none; border-radius: 6px; cursor: pointer; margin-top: 10px; }
-    .price-output { font-size: 30px; color: #2b7a78; font-weight: bold; margin-top: 10px; }
-    .hidden { display: none; }
-  </style>
+  <title>GLC Fencing - Instant Online Fence Estimates</title>
+  <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
 
-<div class="container">
-  <div class="header">
-    <h1>GLC Fencing - Instant Estimate Tool</h1>
-    <p>Search your property address, select the <b>zigzag line icon</b> on top of the map, and tap along your property boundaries.</p>
-  </div>
-
-  <input id="search-box" type="text" placeholder="Enter property address..." />
-  <div id="map"></div>
-
-  <!-- Custom tools strictly below the map -->
-  <div class="tool-bar-bottom">
-    <button class="btn-action gate" type="button" onclick="addGateMarker()">+ Gate (<span id="gate-count">0</span>)</button>
-    <button class="btn-action" type="button" onclick="undoLastPoint()">↩ Undo Point</button>
-    <button class="btn-action danger" type="button" onclick="clearMap()">🗑️ Clear</button>
-  </div>
-
-  <div class="controls-grid">
-    <div class="control-group">
-      <label for="material-select">Fence Material</label>
-      <select id="material-select">
-        <option value="25">Wood Privacy</option>
-        <option value="35">Vinyl Privacy</option>
-        <option value="20">Chain Link</option>
-        <option value="45">Ornamental Aluminum</option>
-      </select>
+  <!-- Hero Section with Background Overlay -->
+  <section class="hero">
+    <div class="hero-content">
+      <h1 class="logo-title">GLC FENCING</h1>
+      <h2>Design Your Fence & Get an Instant Online Quote</h2>
+      <p>
+        Skip the waiting and the high-pressure sales visits. Use our interactive 
+        satellite tool to trace your property line, choose your materials, and get an 
+        instant budget estimate in under two minutes.
+      </p>
+      <a href="estimate.html" class="btn-hero">Get an Instant Quote →</a>
     </div>
-    <div class="control-group">
-      <label for="gate-select">Gates (Auto-counted or Manual)</label>
-      <select id="gate-select">
-        <option value="0">0 Gates</option>
-        <option value="250">1 Gate</option>
-        <option value="500">2 Gates</option>
-        <option value="750">3 Gates</option>
-      </select>
+  </section>
+
+  <!-- Feature Highlights -->
+  <section class="features">
+    <div class="feature-card">
+      <div class="feature-icon">📍</div>
+      <h3>High-Res Satellite</h3>
+      <p>Search your exact address and trace your boundaries on clear aerial images.</p>
     </div>
-  </div>
-
-  <div class="stats-panel">
-    <h3>Total Linear Footage: <span id="footage-display">0</span> ft</h3>
-  </div>
-
-  <div class="lead-form" id="form-container">
-    <h3 style="margin-top:0;">Unlock Your Instant Estimate</h3>
-    <div class="controls-grid">
-      <div class="control-group">
-        <label>Full Name</label>
-        <input type="text" id="lead-name" placeholder="John Doe" required />
-      </div>
-      <div class="control-group">
-        <label>Phone Number</label>
-        <input type="tel" id="lead-phone" placeholder="(912) 555-0199" required />
-      </div>
+    <div class="feature-card">
+      <div class="feature-icon">🛠️</div>
+      <h3>Custom Materials</h3>
+      <p>Choose from Wood Privacy, Vinyl, Chain Link, and Ornamental Aluminum.</p>
     </div>
-    <div class="control-group" style="margin-top: 10px;">
-      <label>Email Address</label>
-      <input type="email" id="lead-email" placeholder="john@example.com" required />
+    <div class="feature-card">
+      <div class="feature-icon">⚡</div>
+      <h3>Instant Pricing</h3>
+      <p>Receive an accurate regional pricing range customized to your linear footage.</p>
     </div>
-    <button class="btn-submit" type="button" onclick="submitLead()">View Estimate Range</button>
-  </div>
-
-  <div id="result-container" class="stats-panel hidden">
-    <h3>Estimated Investment Range</h3>
-    <div class="price-output" id="price-display">$0 - $0</div>
-    <p style="font-size: 13px; color: #555; margin-top: 10px;">
-      Thank you! A copy of this estimate has been logged for our team. We will reach out shortly to confirm details.
-    </p>
-  </div>
-</div>
-
-<script>
-  let map, drawingManager, currentPolyline = null;
-  let currentFeet = 0;
-  let gateCount = 0;
-  let gateMarkers = [];
-
-  function initMap() {
-    map = new google.maps.Map(document.getElementById("map"), {
-      center: { lat: 32.1313, lng: -81.2323 },
-      zoom: 19,
-      mapTypeId: 'hybrid',
-      tilt: 0
-    });
-
-    setupAutocomplete();
-    setupDrawingManager();
-  }
-
-  function setupAutocomplete() {
-    const input = document.getElementById("search-box");
-    const autocomplete = new google.maps.places.Autocomplete(input, {
-      types: ['address'],
-      componentRestrictions: { country: 'us' }
-    });
-
-    autocomplete.bindTo("bounds", map);
-    autocomplete.addListener("place_changed", () => {
-      const place = autocomplete.getPlace();
-      if (!place.geometry || !place.geometry.location) return;
-      map.setCenter(place.geometry.location);
-      map.setZoom(19);
-    });
-  }
-
-  function setupDrawingManager() {
-    drawingManager = new google.maps.drawing.DrawingManager({
-      drawingMode: google.maps.drawing.OverlayType.POLYLINE,
-      drawingControl: true,
-      drawingControlOptions: {
-        position: google.maps.ControlPosition.TOP_CENTER,
-        drawingModes: [google.maps.drawing.OverlayType.POLYLINE]
-      },
-      polylineOptions: {
-        strokeColor: '#FF0000',
-        strokeOpacity: 1.0,
-        strokeWeight: 4,
-        editable: true
-      }
-    });
-
-    drawingManager.setMap(map);
-
-    google.maps.event.addListener(drawingManager, 'overlaycomplete', function(event) {
-      if (event.type === google.maps.drawing.OverlayType.POLYLINE) {
-        if (currentPolyline) currentPolyline.setMap(null);
-        currentPolyline = event.overlay;
-        
-        bindPathListeners(currentPolyline.getPath());
-      }
-    });
-  }
-
-  function bindPathListeners(path) {
-    calculateLength();
-    google.maps.event.addListener(path, 'insert_at', calculateLength);
-    google.maps.event.addListener(path, 'set_at', calculateLength);
-    google.maps.event.addListener(path, 'remove_at', calculateLength);
-  }
-
-  function calculateLength() {
-    if (!currentPolyline) return;
-    const path = currentPolyline.getPath();
-    const lengthInMeters = google.maps.geometry.spherical.computeLength(path);
-    currentFeet = Math.round(lengthInMeters * 3.28084);
-    document.getElementById("footage-display").innerText = currentFeet;
-  }
-
-  function addGateMarker() {
-    gateCount++;
-    document.getElementById("gate-count").innerText = gateCount;
-    document.getElementById("gate-select").value = (gateCount * 250).toString();
-
-    const marker = new google.maps.Marker({
-      position: map.getCenter(),
-      map: map,
-      draggable: true,
-      label: { text: "🚪", fontSize: "16px" }
-    });
-    gateMarkers.push(marker);
-  }
-
-  function undoLastPoint() {
-    if (currentPolyline) {
-      const path = currentPolyline.getPath();
-      if (path.getLength() > 0) {
-        path.pop();
-        calculateLength();
-      }
-    }
-  }
-
-  function clearMap() {
-    if (currentPolyline) {
-      currentPolyline.setMap(null);
-      currentPolyline = null;
-      currentFeet = 0;
-      document.getElementById("footage-display").innerText = "0";
-    }
-    gateMarkers.forEach(m => m.setMap(null));
-    gateMarkers = [];
-    gateCount = 0;
-    document.getElementById("gate-count").innerText = "0";
-    document.getElementById("gate-select").value = "0";
-  }
-
-  function submitLead() {
-    const name = document.getElementById("lead-name").value;
-    const phone = document.getElementById("lead-phone").value;
-    const email = document.getElementById("lead-email").value;
-
-    if (!name || !phone || !email) {
-      alert("Please fill out all contact fields.");
-      return;
-    }
-
-    if (currentFeet === 0) {
-      alert("Please draw your fence line on the map first.");
-      return;
-    }
-
-    const costPerFoot = parseFloat(document.getElementById("material-select").value);
-    const gateCost = parseFloat(document.getElementById("gate-select").value);
-    const baseCost = (currentFeet * costPerFoot) + gateCost;
-
-    const lowEnd = Math.round(baseCost * 0.90);
-    const highEnd = Math.round(baseCost * 1.10);
-
-    document.getElementById("price-display").innerText = `$${lowEnd.toLocaleString()} - $${highEnd.toLocaleString()}`;
-    document.getElementById("form-container").classList.add("hidden");
-    document.getElementById("result-container").classList.remove("hidden");
-  }
-</script>
+  </section>
 
 </body>
 </html>

@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>GLC Fencing - Estimate Workspace</title>
+  <link rel="stylesheet" href="styles.css" />
+  <script async defer 
+    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDigtiw69XtU_EC1ke5cUJLtEUBQSTi9CE&libraries=drawing,places,geometry&v=3.64&callback=initMap">
+  </script>
+</head>
+<body class="workspace-body">
+
+  <header class="workspace-header">
+    <a href="index.html" class="back-link">← Home</a>
+    <h2>GLC Fencing Estimator</h2>
+  </header>
+
+  <main class="container">
+    <div class="step-card">
+      <label for="search-box" class="section-label">Step 1: Enter Property Address</label>
+      <input id="search-box" class="input-field" type="text" placeholder="Start typing address..." />
+    </div>
+
+    <div class="step-card">
+      <label class="section-label">Step 2: Draw Fence Line</label>
+      <p class="instruction-text">Tap the <b>zigzag icon</b> on top of the map to begin drawing along your property line.</p>
+      
+      <div id="map"></div>
+
+      <!-- Controls placed cleanly below the map container -->
+      <div class="tool-bar-bottom">
+        <button class="btn-action gate" type="button" onclick="addGateMarker()">+ Add Gate (<span id="gate-count">0</span>)</button>
+        <button class="btn-action" type="button" onclick="undoLastPoint()">↩ Undo Point</button>
+        <button class="btn-action danger" type="button" onclick="clearMap()">🗑️ Clear</button>
+      </div>
+
+      <div class="stats-badge">Total Linear Footage: <span id="footage-display">0</span> ft</div>
+    </div>
+
+    <div class="step-card">
+      <label class="section-label">Step 3: Fence Specifications</label>
+      <div class="controls-grid">
+        <div class="control-group">
+          <label for="material-select">Material Option</label>
+          <select id="material-select" class="input-field">
+            <option value="25">Wood Privacy ($25/ft baseline)</option>
+            <option value="35">Vinyl Privacy ($35/ft baseline)</option>
+            <option value="20">Chain Link ($20/ft baseline)</option>
+            <option value="45">Ornamental Aluminum ($45/ft baseline)</option>
+          </select>
+        </div>
+        <div class="control-group">
+          <label for="height-select">Fence Height</label>
+          <select id="height-select" class="input-field">
+            <option value="1.0">4 Feet</option>
+            <option value="1.1">5 Feet</option>
+            <option value="1.2" selected>6 Feet</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div class="step-card">
+      <div id="form-container">
+        <label class="section-label">Step 4: Unlock Instant Quote</label>
+        <div class="controls-grid">
+          <div class="control-group">
+            <label for="lead-name">Full Name</label>
+            <input type="text" id="lead-name" class="input-field" placeholder="John Doe" required />
+          </div>
+          <div class="control-group">
+            <label for="lead-phone">Phone Number</label>
+            <input type="tel" id="lead-phone" class="input-field" placeholder="(912) 555-0199" required />
+          </div>
+        </div>
+        <div class="control-group">
+          <label for="lead-email">Email Address</label>
+          <input type="email" id="lead-email" class="input-field" placeholder="john@example.com" required />
+        </div>
+        <button class="btn-primary" type="button" onclick="submitLead()">View Estimate Range</button>
+      </div>
+
+      <div id="result-container" class="results-box hidden">
+        <h3>Estimated Investment Range</h3>
+        <div class="price-output" id="price-display">$0 - $0</div>
+        <p class="summary-text">
+          Thank you! A copy of this estimate has been logged for our team. We will reach out shortly to confirm site specifics.
+        </p>
+      </div>
+    </div>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>
