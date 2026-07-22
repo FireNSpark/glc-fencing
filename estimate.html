@@ -5,6 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>GLC Fencing - Estimate Workspace</title>
   <link rel="stylesheet" href="styles.css" />
+  <!-- Define app logic FIRST so initMap exists when Google API loads -->
+  <script src="app.js"></script>
   <script async defer 
     src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDigtiw69XtU_EC1ke5cUJLtEUBQSTi9CE&libraries=drawing,places,geometry&v=3.64&callback=initMap">
   </script>
@@ -20,7 +22,7 @@
     <!-- Step 1: Address Input -->
     <div class="step-card">
       <label for="search-box" class="section-label">Step 1: Enter Property Address</label>
-      <input id="search-box" class="input-field" type="text" placeholder="Type property address..." />
+      <input id="search-box" class="input-field" type="text" placeholder="Type property address..." autocomplete="off" />
     </div>
 
     <!-- Step 2: Map Drawing -->
@@ -94,6 +96,5 @@
     </div>
   </main>
 
-  <script src="app.js"></script>
 </body>
 </html>

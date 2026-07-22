@@ -4,11 +4,15 @@ let gateCount = 0;
 let gateMarkers = [];
 
 function initMap() {
-  map = new google.maps.Map(document.getElementById("map"), {
+  const mapElement = document.getElementById("map");
+  if (!mapElement) return;
+
+  map = new google.maps.Map(mapElement, {
     center: { lat: 32.1313, lng: -81.2323 },
     zoom: 19,
     mapTypeId: 'hybrid',
-    tilt: 0
+    tilt: 0,
+    gestureHandling: 'greedy'
   });
 
   setupAutocomplete();
@@ -17,6 +21,8 @@ function initMap() {
 
 function setupAutocomplete() {
   const input = document.getElementById("search-box");
+  if (!input) return;
+
   const autocomplete = new google.maps.places.Autocomplete(input, {
     types: ['address'],
     componentRestrictions: { country: 'us' }
@@ -26,6 +32,7 @@ function setupAutocomplete() {
   autocomplete.addListener("place_changed", () => {
     const place = autocomplete.getPlace();
     if (!place.geometry || !place.geometry.location) return;
+    
     map.setCenter(place.geometry.location);
     map.setZoom(19);
   });
