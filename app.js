@@ -3,11 +3,19 @@ let fencePolyline = null;
 let pathArray = null;
 let currentFeet = 0;
 
+const PRICING_DATA = {
+  wood_privacy:         { low: 18, high: 22, singleGate: 200, doubleGate: 400 },
+  wood_semi_privacy:    { low: 20, high: 24, singleGate: 200, doubleGate: 400 },
+  wood_board_on_board:  { low: 20, high: 24, singleGate: 200, doubleGate: 400 },
+  vinyl_privacy:        { low: 36, high: 38, singleGate: 450, doubleGate: 900 },
+  chain_link:           { low: 18, high: 21, singleGate: 100, doubleGate: 200 },
+  ornamental_aluminum: { low: 40, high: 45, singleGate: 250, doubleGate: 450 }
+};
+
 function initMap() {
   const mapElement = document.getElementById("map");
   if (!mapElement) return;
 
-  // Initialize map with maxZoom forced to 24 to allow extreme close-up pinch zoom
   map = new google.maps.Map(mapElement, {
     center: { lat: 32.1313, lng: -81.2323 },
     zoom: 20,
@@ -18,7 +26,6 @@ function initMap() {
     gestureHandling: 'greedy'
   });
 
-  // Create active polyline instance
   fencePolyline = new google.maps.Polyline({
     strokeColor: '#FF0000',
     strokeOpacity: 1.0,
@@ -29,13 +36,11 @@ function initMap() {
 
   pathArray = fencePolyline.getPath();
 
-  // Listen directly for map taps to drop points and calculate in real time
   map.addListener('click', (e) => {
     pathArray.push(e.latLng);
     calculateLength();
   });
 
-  // Listen for vertex edits (dragging red points)
   google.maps.event.addListener(pathArray, 'set_at', calculateLength);
   google.maps.event.addListener(pathArray, 'insert_at', calculateLength);
   google.maps.event.addListener(pathArray, 'remove_at', calculateLength);
@@ -102,15 +107,18 @@ function submitLead() {
     return;
   }
 
-  const baseMaterialCost = parseFloat(document.getElementById("material-select").value);
+  const selectedMaterialKey = document.getElementById("material-select").value;
+  const materialData = PRICING_DATA[selectedMaterialKey] || PRICING_DATA.wood_privacy;
+
   const heightMultiplier = parseFloat(document.getElementById("height-select").value);
-  const singleGateCost = parseFloat(document.getElementById("single-gate-select").value);
-  const doubleGateCost = parseFloat(document.getElementById("double-gate-select").value);
+  const singleGateCount = parseInt(document.getElementById("single-gate-select").value, 10) || 0;
+  const doubleGateCount = parseInt(document.getElementById("double-gate-select").value, 10) || 0;
 
-  const baseCost = ((currentFeet * baseMaterialCost) * heightMultiplier) + singleGateCost + doubleGateCost;
+  const singleGateTotal = singleGateCount * materialData.singleGate;
+  const doubleGateTotal = doubleGateCount * materialData.doubleGate;
 
-  const lowEnd = Math.round(baseCost * 0.90);
-  const highEnd = Math.round(baseCost * 1.10);
+  const lowEnd = Math.round(((currentFeet * materialData.low) * heightMultiplier) + singleGateTotal + doubleGateTotal);
+  const highEnd = Math.round(((currentFeet * materialData.high) * heightMultiplier) + singleGateTotal + doubleGateTotal);
 
   document.getElementById("price-display").innerText = `$${lowEnd.toLocaleString()} - $${highEnd.toLocaleString()}`;
   document.getElementById("form-container").classList.add("hidden");
