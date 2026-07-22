@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>GLC Fencing - Instant Estimate Tool</title>
   <script async defer 
     src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDigtiw69XtU_EC1ke5cUJLtEUBQSTi9CE&libraries=drawing,places,geometry&v=3.64&callback=initMap">
@@ -10,18 +10,15 @@
   <style>
     body { font-family: Arial, sans-serif; margin: 0; padding: 15px; background: #f4f4f9; }
     .container { max-width: 900px; margin: auto; background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-    h2 { margin-top: 0; color: #222; }
     #search-box { width: 100%; padding: 12px; font-size: 16px; box-sizing: border-box; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 4px; }
     #map { height: 380px; width: 100%; border-radius: 6px; margin-bottom: 10px; }
     .map-tools { display: flex; gap: 10px; margin-bottom: 15px; }
     .btn-tool { flex: 1; padding: 12px; font-size: 14px; font-weight: bold; border: 1px solid #ccc; background: #fff; border-radius: 4px; cursor: pointer; }
-    .btn-tool:active { background: #e0e0e0; }
     .controls-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px; }
     .control-group { display: flex; flex-direction: column; }
     .control-group label { font-weight: bold; margin-bottom: 5px; font-size: 13px; }
     .control-group select, .control-group input { padding: 10px; font-size: 14px; border-radius: 4px; border: 1px solid #ccc; }
     .stats-panel { padding: 15px; background: #eef2f5; border-radius: 6px; text-align: center; margin-bottom: 15px; }
-    .stats-panel h3 { margin: 0; color: #333; font-size: 18px; }
     .price-range { font-size: 26px; color: #2b7a78; font-weight: bold; margin-top: 10px; }
     .lead-form { background: #fafafa; padding: 15px; border: 1px solid #ddd; border-radius: 6px; }
     .btn-submit { width: 100%; padding: 14px; background: #2b7a78; color: white; font-size: 16px; font-weight: bold; border: none; border-radius: 4px; cursor: pointer; margin-top: 10px; }
@@ -32,7 +29,7 @@
 
 <div class="container">
   <h2>GLC Fencing - Instant Estimate Tool</h2>
-  <p style="font-size: 14px; color: #555;">Search your address, tap the <b>zigzag icon</b> on top of the map to start drawing, and connect your property lines.</p>
+  <p style="font-size: 14px; color: #555;">Enter property address to focus on the house. Tap the <b>zigzag line icon</b> on the map to begin placing points.</p>
   
   <input id="search-box" type="text" placeholder="Enter property address..." />
   <div id="map"></div>
@@ -89,9 +86,6 @@
   <div id="result-container" class="stats-panel hidden" style="background: #e6f4f1; border: 1px solid #2b7a78;">
     <h3 style="color: #222;">Estimated Price Range</h3>
     <div class="price-range" id="price-display">$0 - $0</div>
-    <p style="font-size: 13px; color: #555; margin-top: 10px;">
-      Thank you! A copy of this estimate and project summary has been logged for our team. We will reach out shortly to confirm details and schedule a site visit.
-    </p>
   </div>
 </div>
 
@@ -100,14 +94,19 @@
   let currentFeet = 0;
 
   function initMap() {
+    // Mobile optimized initialization without touch locks
     map = new google.maps.Map(document.getElementById("map"), {
       center: { lat: 32.1313, lng: -81.2323 },
-      zoom: 20,
+      zoom: 19,
       mapTypeId: 'hybrid',
-      tilt: 0,
-      gestureHandling: 'greedy'
+      tilt: 0
     });
 
+    setupAutocomplete();
+    setupDrawingManager();
+  }
+
+  function setupAutocomplete() {
     const input = document.getElementById("search-box");
     const autocomplete = new google.maps.places.Autocomplete(input, {
       types: ['address'],
@@ -119,10 +118,13 @@
       const place = autocomplete.getPlace();
       if (!place.geometry || !place.geometry.location) return;
       
-      map.setCenter(place.geometry.location); 
-      map.setZoom(20); 
+      // Center on house at zoom 19, allowing free manual zoom in/out from there
+      map.setCenter(place.geometry.location);
+      map.setZoom(19);
     });
+  }
 
+  function setupDrawingManager() {
     drawingManager = new google.maps.drawing.DrawingManager({
       drawingMode: null,
       drawingControl: true,
@@ -133,37 +135,33 @@
       polylineOptions: {
         strokeColor: '#FF0000',
         strokeOpacity: 1.0,
-        strokeWeight: 5,
+        strokeWeight: 4,
         editable: true
       }
     });
 
     drawingManager.setMap(map);
 
-    // Listen for line updates directly while drawing
-    google.maps.event.addListener(drawingManager, 'polylinecomplete', function(polyline) {
-      if (currentPolyline) currentPolyline.setMap(null);
-      currentPolyline = polyline;
-      drawingManager.setDrawingMode(null); // Turn off drawing mode when complete
+    google.maps.event.addListener(drawingManager, 'overlaycomplete', function(event) {
+      if (event.type === google.maps.drawing.OverlayType.POLYLINE) {
+        if (currentPolyline) currentPolyline.setMap(null);
+        currentPolyline = event.overlay;
+        
+        const path = currentPolyline.getPath();
+        calculateLength();
 
-      const path = currentPolyline.getPath();
-      calculateLength();
-
-      google.maps.event.addListener(path, 'set_at', calculateLength);
-      google.maps.event.addListener(path, 'insert_at', calculateLength);
-      google.maps.event.addListener(path, 'remove_at', calculateLength);
+        google.maps.event.addListener(path, 'set_at', calculateLength);
+        google.maps.event.addListener(path, 'insert_at', calculateLength);
+        google.maps.event.addListener(path, 'remove_at', calculateLength);
+      }
     });
   }
 
   function calculateLength() {
     if (!currentPolyline) return;
     const path = currentPolyline.getPath();
-    if (path.getLength() < 2) {
-      currentFeet = 0;
-    } else {
-      const lengthInMeters = google.maps.geometry.spherical.computeLength(path);
-      currentFeet = Math.round(lengthInMeters * 3.28084);
-    }
+    const lengthInMeters = google.maps.geometry.spherical.computeLength(path);
+    currentFeet = Math.round(lengthInMeters * 3.28084);
     document.getElementById("footage-display").innerText = currentFeet;
   }
 
