@@ -1,4 +1,5 @@
 let map;
+let drawingManager;
 let currentPolyline = null;
 let currentFeet = 0;
 
@@ -6,38 +7,19 @@ function initMap() {
   const mapElement = document.getElementById("map");
   if (!mapElement) return;
 
-  // Initialize map centered at zoom 20 with no maxZoom lock
+  // Initialize map at zoom 20 with maxZoom explicitly uncapped to 22
   map = new google.maps.Map(mapElement, {
     center: { lat: 32.1313, lng: -81.2323 },
     zoom: 20,
+    maxZoom: 22,
+    minZoom: 1,
     mapTypeId: 'hybrid',
     tilt: 0,
     gestureHandling: 'greedy'
   });
 
-  // Create primary drawing polyline immediately
-  currentPolyline = new google.maps.Polyline({
-    strokeColor: '#FF0000',
-    strokeOpacity: 1.0,
-    strokeWeight: 4,
-    editable: true,
-    map: map
-  });
-
-  // Direct map tap listener - adds point directly to line
-  map.addListener('click', (e) => {
-    const path = currentPolyline.getPath();
-    path.push(e.latLng);
-    calculateLength();
-  });
-
-  // Listen for manual vertex adjustments/drags on the line
-  const path = currentPolyline.getPath();
-  google.maps.event.addListener(path, 'set_at', calculateLength);
-  google.maps.event.addListener(path, 'insert_at', calculateLength);
-  google.maps.event.addListener(path, 'remove_at', calculateLength);
-
   setupAutocomplete();
+  setupDrawingManager();
 }
 
 function setupAutocomplete() {
@@ -53,23 +35,62 @@ function setupAutocomplete() {
   autocomplete.addListener("place_changed", () => {
     const place = autocomplete.getPlace();
     if (!place.geometry || !place.geometry.location) return;
-    
+
     map.setCenter(place.geometry.location);
     map.setZoom(20);
   });
 }
 
-function calculateLength() {
-  if (!currentPolyline) return;
-  const path = currentPolyline.getPath();
-  
+function setupDrawingManager() {
+  drawingManager = new google.maps.drawing.DrawingManager({
+    drawingMode: google.maps.drawing.OverlayType.POLYLINE,
+    drawingControl: true,
+    drawingControlOptions: {
+      position: google.maps.ControlPosition.TOP_CENTER,
+      drawingModes: [google.maps.drawing.OverlayType.POLYLINE]
+    },
+    polylineOptions: {
+      strokeColor: '#FF0000',
+      strokeOpacity: 1.0,
+      strokeWeight: 4,
+      editable: true,
+      draggable: false
+    }
+  });
+
+  drawingManager.setMap(map);
+
+  google.maps.event.addListener(drawingManager, 'overlaycomplete', function(event) {
+    if (event.type === google.maps.drawing.OverlayType.POLYLINE) {
+      if (currentPolyline) currentPolyline.setMap(null);
+      currentPolyline = event.overlay;
+
+      const path = currentPolyline.getPath();
+      bindPathListeners(path);
+    }
+  });
+}
+
+function bindPathListeners(path) {
+  calculateLength(path);
+  google.maps.event.addListener(path, 'insert_at', () => calculateLength(path));
+  google.maps.event.addListener(path, 'set_at', () => calculateLength(path));
+  google.maps.event.addListener(path, 'remove_at', () => calculateLength(path));
+}
+
+function calculateLength(path) {
+  if (!path) {
+    if (currentPolyline) path = currentPolyline.getPath();
+    else return;
+  }
+
   if (path.getLength() < 2) {
     currentFeet = 0;
   } else {
     const lengthInMeters = google.maps.geometry.spherical.computeLength(path);
     currentFeet = Math.round(lengthInMeters * 3.28084);
   }
-  
+
   document.getElementById("footage-display").innerText = currentFeet;
 }
 
@@ -78,14 +99,15 @@ function undoLastPoint() {
     const path = currentPolyline.getPath();
     if (path.getLength() > 0) {
       path.pop();
-      calculateLength();
+      calculateLength(path);
     }
   }
 }
 
 function clearMap() {
   if (currentPolyline) {
-    currentPolyline.setPath([]);
+    currentPolyline.setMap(null);
+    currentPolyline = null;
   }
   currentFeet = 0;
   document.getElementById("footage-display").innerText = "0";
@@ -102,14 +124,14 @@ function submitLead() {
   }
 
   if (currentFeet === 0) {
-    alert("Please tap on the map to draw your fence line first.");
+    alert("Please draw your fence line on the map first.");
     return;
   }
 
   const baseMaterialCost = parseFloat(document.getElementById("material-select").value);
   const heightMultiplier = parseFloat(document.getElementById("height-select").value);
   const gateCost = parseFloat(document.getElementById("gate-select").value);
-  
+
   const baseCost = ((currentFeet * baseMaterialCost) * heightMultiplier) + gateCost;
 
   const lowEnd = Math.round(baseCost * 0.90);
