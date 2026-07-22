@@ -1,6 +1,15 @@
 * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
 body { margin: 0; padding: 0; background: #f4f6f8; color: #1c1e21; }
 
+/* FIX FOR GOOGLE MAPS AUTOCOMPLETE DROPDOWN VISIBILITY ON MOBILE */
+.pac-container {
+  z-index: 99999 !important;
+  background-color: #ffffff !important;
+  border-radius: 6px !important;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15) !important;
+  font-family: inherit !important;
+}
+
 /* Landing Page Styles */
 .hero {
   min-height: 80vh;
@@ -85,4 +94,4 @@ body { margin: 0; padding: 0; background: #f4f6f8; color: #1c1e21; }
 .price-output { font-size: 32px; color: #2b7a78; font-weight: bold; margin: 10px 0; }
 .summary-text { font-size: 13px; color: #555; margin: 0; }
 
-.hidden { display: none; }
+.hidden { display: none !important; }

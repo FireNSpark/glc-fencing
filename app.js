@@ -26,9 +26,29 @@ function setupAutocomplete() {
   autocomplete.addListener("place_changed", () => {
     const place = autocomplete.getPlace();
     if (!place.geometry || !place.geometry.location) return;
+    
     map.setCenter(place.geometry.location);
     map.setZoom(19);
+    proceedToMap();
   });
+}
+
+function proceedToMap() {
+  const inputVal = document.getElementById("search-box").value;
+  if (!inputVal) {
+    alert("Please enter your property address first.");
+    return;
+  }
+
+  document.getElementById("step-2-card").classList.remove("hidden");
+  document.getElementById("step-3-card").classList.remove("hidden");
+  document.getElementById("step-4-card").classList.remove("hidden");
+  document.getElementById("btn-to-step-2").classList.add("hidden");
+
+  // Resize Google Map instance when unhidden
+  setTimeout(() => {
+    google.maps.event.trigger(map, 'resize');
+  }, 100);
 }
 
 function setupDrawingManager() {
