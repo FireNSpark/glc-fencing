@@ -3,8 +3,6 @@ let fencePolyline = null;
 let pathArray = null;
 let currentFeet = 0;
 
-const WEB3FORMS_KEY = '680c4041-5f06-4b18-8988-45c9209c9245';
-
 const PRICING_DATA = {
   wood_privacy:         { label: 'Wood Privacy', low: 18, high: 22, singleGate: 200, doubleGate: 400 },
   wood_semi_privacy:    { label: 'Wood Semi-Privacy', low: 20, high: 24, singleGate: 200, doubleGate: 400 },
@@ -134,24 +132,25 @@ async function submitLead() {
   const highEnd = Math.round(((currentFeet * materialData.high) * heightMultiplier) + singleGateTotal + doubleGateTotal);
 
   try {
-    // Lead details sent to GLC Fencing with customer replyto set
-    await fetch('https://api.web3forms.com/submit', {
+    await fetch('https://formsubmit.co/ajax/Glcga19@gmail.com', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      },
       body: JSON.stringify({
-        access_key: WEB3FORMS_KEY,
-        subject: `New GLC Fence Lead: ${name} (${currentFeet} ft)`,
-        from_name: 'GLC Estimator Bot',
-        replyto: email,
-        name,
-        phone,
-        email,
-        footage: `${currentFeet} linear feet`,
-        material: materialData.label,
-        height: heightText,
-        single_gates: singleGateCount,
-        double_gates: doubleGateCount,
-        estimated_range: `$${lowEnd.toLocaleString()} - $${highEnd.toLocaleString()}`
+        _subject: `New GLC Fence Lead: ${name} (${currentFeet} ft)`,
+        _replyto: email,
+        _autorespond: `Thank you for requesting an estimate with GLC Fencing!\n\nHere are your project details:\n- Total Footage: ${currentFeet} linear feet\n- Material: ${materialData.label}\n- Height: ${heightText}\n- Single Gates: ${singleGateCount}\n- Double Gates: ${doubleGateCount}\n- Estimated Price Range: $${lowEnd.toLocaleString()} - $${highEnd.toLocaleString()}\n\nWe will be in touch with you shortly.`,
+        "Customer Name": name,
+        "Customer Phone": phone,
+        "Customer Email": email,
+        "Footage": `${currentFeet} linear feet`,
+        "Material": materialData.label,
+        "Height": heightText,
+        "Single Gates": singleGateCount,
+        "Double Gates": doubleGateCount,
+        "Estimated Range": `$${lowEnd.toLocaleString()} - $${highEnd.toLocaleString()}`
       })
     });
   } catch (err) {
