@@ -129,11 +129,18 @@
   </section>
 
   <!-- Preferred Local Partners Directory -->
-  <section id="partners" class="partners-section" style="padding: 3rem 1rem; max-width: 1100px; margin: 0 auto;">
-    <div style="text-align: center; margin-bottom: 2rem;">
-      <h2 style="font-size: 1.875rem; font-weight: bold;">Trusted Local Service Partners</h2>
-      <p style="color: #4b5563; margin-top: 0.5rem;">We collaborate with top-rated local professionals across Effingham & Chatham County.</p>
-    </div>
+    <!-- Main Directory + Updates Container -->
+  <section id="partners" style="padding: 3rem 1rem; max-width: 1200px; margin: 0 auto;">
+    
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem; align-items: start;">
+      
+      <!-- Left: Partners (Takes priority) -->
+      <div style="flex: 2;">
+        <div style="margin-bottom: 1.5rem;">
+          <h2 style="font-size: 1.75rem; font-weight: bold; color: #0f172a;">Trusted Local Service Partners</h2>
+          <p style="color: #4b5563; font-size: 0.9rem;">Verified local pros across Effingham & Chatham County.</p>
+        </div>
+
 
     <!-- Category Grid -->
     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1.5rem;">
@@ -217,7 +224,46 @@
         Apply to Join Network →
       </button>
     </div>
+  
+      </div> <!-- End Left Column -->
+
+      <!-- Right Column: Sidebar News & Newsletter -->
+      <aside style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 0.75rem; padding: 1.5rem; position: sticky; top: 1rem;">
+        
+        <!-- Newsletter Signup -->
+        <div style="margin-bottom: 2rem; border-bottom: 1px solid #e2e8f0; padding-bottom: 1.5rem;">
+          <h3 style="font-size: 1.1rem; font-weight: 700; color: #0f172a; margin-bottom: 0.5rem;">📩 Effingham Fence & HOA Updates</h3>
+          <p style="font-size: 0.85rem; color: #64748b; margin-bottom: 1rem;">Get seasonal maintenance tips, local HOA guideline changes, and discount alerts.</p>
+          
+          <form action="https://formsubmit.co/Glcga19@gmail.com" method="POST" style="display: flex; flex-direction: column; gap: 0.5rem;">
+            <input type="hidden" name="_subject" value="New Newsletter Subscriber - GLC Fencing" />
+            <input type="email" name="newsletter_email" required placeholder="Enter your email" style="padding: 0.6rem; border: 1px solid #cbd5e1; border-radius: 0.375rem; font-size: 0.875rem;" />
+            <button type="submit" style="background: #059669; color: #ffffff; font-weight: 600; padding: 0.6rem; border-radius: 0.375rem; border: none; cursor: pointer; font-size: 0.875rem;">Subscribe</button>
+          </form>
+        </div>
+
+        <!-- Local Announcements / Feed -->
+        <div>
+          <h4 style="font-size: 0.95rem; font-weight: 700; color: #0f172a; margin-bottom: 0.75rem;">📢 Latest Updates</h4>
+          
+          <div style="display: flex; flex-direction: column; gap: 0.85rem;">
+            <div style="font-size: 0.825rem; border-left: 3px solid #059669; padding-left: 0.6rem;">
+              <strong style="color: #1e293b; display: block;">Spring Installation Openings</strong>
+              <span style="color: #64748b;">Booking Effingham & Pooler schedules 2 weeks out.</span>
+            </div>
+
+            <div style="font-size: 0.825rem; border-left: 3px solid #3b82f6; padding-left: 0.6rem;">
+              <strong style="color: #1e293b; display: block;">Capwell Inspections Added</strong>
+              <span style="color: #64748b;">Welcoming Capwell Home Inspections to the preferred network!</span>
+            </div>
+          </div>
+        </div>
+
+      </aside>
+
+    </div> <!-- End Grid -->
   </section>
+
 
   <!-- Partner Application Modal -->
   <div id="partner-modal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(2px); align-items: center; justify-content: center; padding: 1rem; z-index: 1000;">
