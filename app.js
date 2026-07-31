@@ -54,19 +54,27 @@ function setupAutocomplete() {
   const input = document.getElementById("search-box");
   if (!input) return;
 
-  const autocomplete = new google.maps.places.Autocomplete(input, {
-    types: ['address'],
-    componentRestrictions: { country: 'us' }
-  });
+  try {
+    const autocomplete = new google.maps.places.Autocomplete(input, {
+      types: ['address'],
+      componentRestrictions: { country: 'us' },
+      fields: ['geometry', 'formatted_address']
+    });
 
-  autocomplete.bindTo("bounds", map);
-  autocomplete.addListener("place_changed", () => {
-    const place = autocomplete.getPlace();
-    if (!place.geometry || !place.geometry.location) return;
+    autocomplete.bindTo("bounds", map);
+    autocomplete.addListener("place_changed", () => {
+      const place = autocomplete.getPlace();
+      if (!place.geometry || !place.geometry.location) {
+        alert("No location details available for that address.");
+        return;
+      }
 
-    map.setCenter(place.geometry.location);
-    map.setZoom(20);
-  });
+      map.setCenter(place.geometry.location);
+      map.setZoom(20);
+    });
+  } catch (err) {
+    console.error("Autocomplete failed to load:", err);
+  }
 }
 
 function calculateLength() {
