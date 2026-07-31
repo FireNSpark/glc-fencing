@@ -134,13 +134,15 @@ async function submitLead() {
   const highEnd = Math.round(((currentFeet * materialData.high) * heightMultiplier) + singleGateTotal + doubleGateTotal);
 
   try {
-    fetch('https://api.web3forms.com/submit', {
+    // Lead details sent to GLC Fencing with customer replyto set
+    await fetch('https://api.web3forms.com/submit', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         access_key: WEB3FORMS_KEY,
         subject: `New GLC Fence Lead: ${name} (${currentFeet} ft)`,
         from_name: 'GLC Estimator Bot',
+        replyto: email,
         name,
         phone,
         email,
