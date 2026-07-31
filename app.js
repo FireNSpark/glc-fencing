@@ -3,8 +3,7 @@ let fencePolyline = null;
 let pathArray = null;
 let currentFeet = 0;
 
-// PASTE YOUR GOOGLE APPS SCRIPT WEB APP URL HERE
-const GOOGLE_SCRIPT_URL = 'YOUR_GOOGLE_WEB_APP_URL_HERE';
+const WEB3FORMS_KEY = '680c4041-5f06-4b18-8988-45c9209c9245';
 
 const PRICING_DATA = {
   wood_privacy:         { label: 'Wood Privacy', low: 18, high: 22, singleGate: 200, doubleGate: 400 },
@@ -126,27 +125,27 @@ async function submitLead() {
   const lowEnd = Math.round(((currentFeet * materialData.low) * heightMultiplier) + singleGateTotal + doubleGateTotal);
   const highEnd = Math.round(((currentFeet * materialData.high) * heightMultiplier) + singleGateTotal + doubleGateTotal);
 
-  // Send payload to Google Sheets / Gmail Script
   try {
-    fetch(GOOGLE_SCRIPT_URL, {
+    fetch('https://api.web3forms.com/submit', {
       method: 'POST',
-      mode: 'no-cors',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
+        access_key: WEB3FORMS_KEY,
+        subject: `New GLC Fence Lead: ${name} (${currentFeet} ft)`,
+        from_name: 'GLC Estimator Bot',
         name,
         phone,
         email,
-        footage: currentFeet,
+        footage: `${currentFeet} linear feet`,
         material: materialData.label,
         height: heightText,
-        singleGates: singleGateCount,
-        doubleGates: doubleGateCount,
-        lowEnd,
-        highEnd
+        single_gates: singleGateCount,
+        double_gates: doubleGateCount,
+        estimated_range: `$${lowEnd.toLocaleString()} - $${highEnd.toLocaleString()}`
       })
     });
   } catch (err) {
-    console.error("Google Script logging failed:", err);
+    console.error("Lead submission failed:", err);
   }
 
   document.getElementById("price-display").innerText = `$${lowEnd.toLocaleString()} - $${highEnd.toLocaleString()}`;
